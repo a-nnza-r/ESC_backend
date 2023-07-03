@@ -10,6 +10,11 @@
       "StackName": "amplify-softwareconstruct-staging-80022",
       "StackId": "arn:aws:cloudformation:ap-southeast-1:710995195828:stack/amplify-softwareconstruct-staging-80022/a9429620-1977-11ee-a661-0ab700137a06",
       "AmplifyAppId": "d1ld7ce8pxrnh8"
+    },
+    "categories": {
+      "auth": {
+        "SoftwareConstruct": {}
+      }
     }
   }
 }
