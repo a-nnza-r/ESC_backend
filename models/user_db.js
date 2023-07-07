@@ -16,8 +16,9 @@ const credentials = {
 
 export async function createUser(name, email, password) {
   const pool = new Pool(credentials);
-  const query = `INSERT INTO USERS (name, email, password) VALUES ('${name}', '${email}', '${password}');`;
-  await pool.query(query);
+  const values = [name, email, password];
+  const query = `INSERT INTO USERS (name, email, password) VALUES ($1, $2, $3);`;
+  await pool.query(query, values);
   await pool.end();
 }
 
@@ -39,8 +40,10 @@ export async function getUser(user_id) {
 
 export async function getUserEPFs(user_id) {
   const pool = new Pool(credentials);
+  const values = [user_id];
   const result = await pool.query(
-    `SELECT * FROM EPFS WHERE user_id=${user_id};`
+    `SELECT * FROM USERS WHERE user_id=$1`,
+    values
   );
   await pool.end();
   return result["rows"];
@@ -48,15 +51,16 @@ export async function getUserEPFs(user_id) {
 
 export async function updateUser(user_id, name, email, password) {
   const pool = new Pool(credentials);
-  await pool.query(
-    `UPDATE USERS SET name='${name}', email='${email}', password='${password}' WHERE user_id=${user_id};`
-  );
+  const values = [name, email, password, user_id];
+  const query = `UPDATE USERS SET name=$1, email=$2, password=$3 WHERE user_id=$4;`;
+  await pool.query(query, values);
   await pool.end();
 }
 
 export async function deleteUser(user_id) {
   const pool = new Pool(credentials);
-  const query = `DELETE FROM USERS WHERE user_id=${user_id};`;
-  await pool.query(query);
+  const values = [user_id];
+  const query = `DELETE FROM USERS WHERE user_id=$1;`;
+  await pool.query(query, values);
   await pool.end();
 }
