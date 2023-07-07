@@ -1,0 +1,6 @@
+{
+    "user_id": 1,
+    "name": "Name 2",
+    "email": "name_2@mymail.sutd.edu.sg",
+    "password": "hashed_password_2"
+    }
