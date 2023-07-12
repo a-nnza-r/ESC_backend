@@ -1,16 +1,30 @@
 CREATE DATABASE esc_db;
 
-CREATE TABLE USERS (
+CREATE TABLE EXCO (
     user_id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
-    password VARCHAR(255) NOT NULL
+    outstanding_epf INT 
+);
+
+CREATE TABLE OSL (
+    user_id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    outstanding_epf INT 
+);
+
+CREATE TABLE ROOT (
+    user_id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    outstanding_epf INT 
 );
 
 CREATE TABLE EPFS (
     epf_id SERIAL PRIMARY KEY,
     status VARCHAR(50) NOT NULL, 
-    user_id INT NOT NULL,
+    exco_user_id INT NOT NULL,
     date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     A_name VARCHAR(50) NOT NULL,
@@ -18,14 +32,16 @@ CREATE TABLE EPFS (
     A_organisation VARCHAR(50) NOT NULL,
     A_contact_number INT NOT NULL,
     A_email VARCHAR(50) NOT NULL,
-    A_comments VARCHAR(300),
+    A_comments_OSL VARCHAR(50),
+    A_comments_ROOT VARCHAR(50),
 
     B_event_name VARCHAR(50) NOT NULL,
     B_target_audience VARCHAR(50) NOT NULL,
     B_event_schedule TIMESTAMP NOT NULL,
     B_expected_turnout INT NOT NULL,
     B_event_objective VARCHAR(300) NOT NULL,
-    B_comments VARCHAR(300),
+    B_comments_OSL VARCHAR(300),
+    B_comments_ROOT VARCHAR(300),
 
     C1_date TEXT[] NOT NULL,
     C1_time TEXT[] NOT NULL,
@@ -46,7 +62,8 @@ CREATE TABLE EPFS (
     C3_cleanup_time TEXT[] NOT NULL,
     C3_cleanup_activity_and_description TEXT[] NOT NULL,
     C3_cleanup_venue TEXT[] NOT NULL,
-    C_comments VARCHAR(300),
+    C_comments_OSL VARCHAR(1000),
+    C_comments_ROOT VARCHAR(1000),
 
     D1A_club_income_fund MONEY NOT NULL,
     D1A_osl_seed_fund MONEY NOT NULL,
@@ -65,15 +82,18 @@ CREATE TABLE EPFS (
     D2_reason_for_purchase TEXT[] NOT NULL,
     D2_venue TEXT[] NOT NULL,
     D2_total_expenditure MONEY NOT NULL,
-    D_comments VARCHAR(300),
+    D_comments_OSL VARCHAR(300),
+    D_comments_ROOT VARCHAR(300),
 
     E_personal_data INT NOT NULL,
-    E_comments VARCHAR(300),
+    E_comments_OSL VARCHAR(50),
+    E_comments_ROOT VARCHAR(50),
 
     F_name TEXT[] NOT NULL,
     F_student_id TEXT[] NOT NULL,
     F_position TEXT[] NOT NULL,
-    F_comments VARCHAR(300),
+    F_comments_OSL VARCHAR(50),
+    F_comments_ROOT VARCHAR(50),
 
     G_1_1 VARCHAR(100) NOT NULL,
     G_1_2 VARCHAR(100) NOT NULL,
@@ -102,12 +122,12 @@ CREATE TABLE EPFS (
     G_7_1 VARCHAR(100) NOT NULL,
     G_7_2 VARCHAR(100) NOT NULL,
     G_7_3 VARCHAR(100) NOT NULL,
-    G_comments VARCHAR(300),
+    G_comments_OSL VARCHAR(300),
+    G_comments_ROOT VARCHAR(300),
 
-    CONSTRAINT fk_user
-        FOREIGN KEY(user_id)
-            REFERENCES USERS(user_id)
-            ON DELETE CASCADE
+    CONSTRAINT fk_exco
+        FOREIGN KEY(exco_user_id)
+            REFERENCES EXCO(user_id)
 );
 
 
