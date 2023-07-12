@@ -72,13 +72,15 @@ router.put("/updateEPF", async (req,res)=>{
         data["G_7_1"], data["G_7_2"], data["G_7_3"], data["G_comments_OSL"], data["G_comments_ROOT"]
 
     )
-    res.send("Updated EPF")
+    const outstanding_EPF_count = await count_outstanding_EPF()
+    res.send(`Updated EPF, Outstanding EPF Count: ${outstanding_EPF_count}`)
 })
 
 router.delete("/deleteEPF", async (req,res)=>{
     const data = req.body
     await deleteEPF(data["epf_id"])
-    res.send("Deleted EPF")
+    const outstanding_EPF_count = await count_outstanding_EPF()
+    res.send(`Deleted EPF, Outstanding EPF Count: ${outstanding_EPF_count}`)
 })
 
 export default router
