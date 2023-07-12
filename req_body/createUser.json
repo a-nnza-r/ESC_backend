@@ -1,5 +1,4 @@
 {
     "name": "Name 1",
-    "email": "name_1@mymail.sutd.edu.sg",
-    "password": "hashed_password_1"
-    }
+    "email": "name_1@mymail.sutd.edu.sg"
+}
