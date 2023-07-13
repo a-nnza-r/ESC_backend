@@ -114,7 +114,11 @@ router.get("/getEPF", async (req, res) => {
   try {
     const data = req.body;
     const result = await getEPF(data["epf_id"]);
-    res.status(200).send(result);
+    if (result === null) {
+      res.status(404).send("No EPFs found for the given EPF id");
+    } else {
+      res.status(200).send(result);
+    }
   } catch (err) {
     console.log(err);
     res.status(500).send("Server Error");

@@ -276,6 +276,9 @@ export async function getEPF(epf_id) {
     epf_id,
   ]);
   await pool.end();
+  if (result.rowCount === 0) {
+    return null;
+  }
   return result["rows"];
 }
 
