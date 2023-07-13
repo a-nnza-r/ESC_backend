@@ -134,7 +134,7 @@ router.get("/getEPFs", async (req, res) => {
 router.put("/updateEPF", async (req, res) => {
   const data = req.body;
   try {
-    const updateEPF = await updateEPF(
+    const updateCheck = await updateEPF(
       data["epf_id"],
       data["status"],
       data["exco_user_id"],
@@ -220,7 +220,7 @@ router.put("/updateEPF", async (req, res) => {
       data["G_comments_ROOT"]
     );
 
-    if (updateEPF) {
+    if (updateCheck > 0) {
       const outstanding_EPF_count = await count_outstanding_EPF();
       res
         .status(200)
@@ -238,7 +238,7 @@ router.delete("/deleteEPF", async (req, res) => {
   const data = req.body;
   try {
     const deletedEPF = await deleteEPF(data["epf_id"]);
-    if (deletedEPF) {
+    if (deletedEPF > 0) {
       const outstanding_EPF_count = await count_outstanding_EPF();
       res
         .status(200)
