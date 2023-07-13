@@ -52,7 +52,7 @@ router.get("/getEXCO", async (req, res) => {
 router.get("/getEXCOEPFs", async (req, res) => {
   try {
     const data = req.body;
-    const result = await getEXCOEPFs(data["user_id"]);
+    const result = await getEXCOEPFs(data["exco_user_id"]);
     if (result.length === 0) {
       res.status(404).send("No EPFs found for the given EXCO user");
     } else {
@@ -83,7 +83,7 @@ router.delete("/deleteEXCO", async (req, res) => {
   try {
     const data = req.body;
     const deletedEXCO = await deleteEXCO(data["user_id"]);
-    if (deletedEXCO) {
+    if (deletedEXCO.rowCount > 0) {
       res.status(200).send("Deleted EXCO user");
     } else {
       res.status(404).send("EXCO user not found or could not delete");

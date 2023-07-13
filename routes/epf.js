@@ -105,8 +105,8 @@ router.post("/createEPF", async (req, res) => {
       .status(201)
       .send(`Created EPF, Outstanding EPF Count: ${outstanding_EPF_count}`);
   } catch (err) {
-    console.log("Failed to cretae EPF.", err);
-    res.status(500).send("Failed to cretae EPF.");
+    console.log("Failed to create EPF.", err);
+    res.status(500).send("Failed to create EPF.");
   }
 });
 

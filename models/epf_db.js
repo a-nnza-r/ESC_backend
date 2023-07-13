@@ -6,9 +6,9 @@ const { Pool } = pg;
 
 const credentials = {
   host: "127.0.0.1",
-  user: "postgres",
+  user: "escteam",
   port: 5432,
-  password: "123",
+  password: "johnshot",
   database: "esc_db",
 };
 
@@ -249,6 +249,7 @@ export async function createEPF(
   );
 
   const query = `INSERT INTO EPFS (${column_names}) VALUES (${columnParams})`;
+  console.log(query);
   await pool.query(query, values);
   await pool.end();
 }

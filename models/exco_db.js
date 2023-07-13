@@ -34,10 +34,10 @@ export async function getEXCO(user_id) {
   return result["rows"];
 }
 
-export async function getEXCOEPFs(user_id) {
+export async function getEXCOEPFs(exco_user_id) {
   const pool = new Pool(credentials);
-  const query = "SELECT * FROM EPFS WHERE user_id=$1";
-  const result = await pool.query(query, [user_id]);
+  const query = "SELECT * FROM EPFS WHERE exco_user_id=$1";
+  const result = await pool.query(query, [exco_user_id]);
   await pool.end();
   return result["rows"];
 }
@@ -52,6 +52,7 @@ export async function updateEXCO(user_id, name, email, password) {
 export async function deleteEXCO(user_id) {
   const pool = new Pool(credentials);
   const query = "DELETE FROM EXCO WHERE user_id=$1";
-  await pool.query(query, [user_id]);
+  const res = await pool.query(query, [user_id]);
   await pool.end();
+  return res; // Returns the result object from the database query execution
 }
