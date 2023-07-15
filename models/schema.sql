@@ -130,6 +130,17 @@ CREATE TABLE EPFS (
             REFERENCES EXCO(user_id)
 );
 
+CREATE TABLE FILES (
+    file_id SERIAL PRIMARY KEY,
+    epf_id INT NOT NULL,
+    file_name VARCHAR(300) NOT NULL,
+    file_data BYTEA NOT NULL,
+
+    CONSTRAINT fk_epf
+        FOREIGN KEY(epf_id)
+            REFERENCES EPFS(epf_id)
+);
+
 
 
 
