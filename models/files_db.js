@@ -31,12 +31,14 @@ export async function uploadFiles(epf_id, files) {
 export async function getFiles(epf_id) {
   const pool = new Pool(credentials);
   const result = await pool.query(
-    `SELECT file_name, file_data from FILES where epf_id=$1`,
+    `SELECT file_id, file_name, file_data from FILES where epf_id=$1`,
     [epf_id]
   );
   const files = result.rows;
+  const file_metadata = {}
   files.forEach((file) => {
-    const { file_name, file_data } = file;
+    const { file_id, file_name, file_data } = file;
+    file_metadata[file_id] = file_name
     //Add own path, add config file later
     const file_path = path.join(
       "C:\\Users\\johnl\\Documents\\project_test_download",
@@ -51,4 +53,16 @@ export async function getFiles(epf_id) {
     });
   });
   await pool.end();
+  return file_metadata
 }
+
+
+export async function deleteFiles(file_ids) {
+  const pool = new Pool(credentials);
+  await pool.query(
+    `DELETE FROM FILES WHERE file_id=ANY($1)`,
+    [file_ids]
+  );
+  await pool.end();
+}
+
