@@ -31,10 +31,9 @@ router.post("/uploadFiles", upload.array("Files", 3), async (req, res) => {
 
 router.get("/getFiles", async (req, res) => {
   try {
-    const data = req.body;
-    const file_metadata = await getFiles(data["epf_id"]);
-    console.log(file_metadata);
-    res.status(200).send({ message: "Downloaded File", files: file_metadata });
+    const data = req.query;
+    const file_metadata = await getFiles(data.epf_id);
+    res.status(200).send({ message: "Downloaded Files", files: file_metadata });
   } catch (e) {
     console.error(e);
     res.status(500).send("Server error");

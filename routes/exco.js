@@ -35,11 +35,11 @@ router.get("/getEXCOs", async (req, res) => {
 });
 
 router.get("/getEXCO", async (req, res) => {
-  const data = req.body;
+  const data = req.query;
   try {
-    const result = await getEXCO(data["user_id"]);
+    const result = await getEXCO(data.user_id);
 
-    if (!result) {
+    if (result.length===0) {
       return res.status(404).send("EXCO not found");
     }
     res.status(200).send(result);
@@ -51,9 +51,9 @@ router.get("/getEXCO", async (req, res) => {
 
 router.get("/getEXCOEPFs", async (req, res) => {
   try {
-    const data = req.body;
-    const result = await getEXCOEPFs(data["exco_user_id"]);
-    if (result.length === 0) {
+    const data = req.query;
+    const result = await getEXCOEPFs(data.exco_user_id);
+    if (result.length===0) {
       res.status(404).send("No EPFs found for the given EXCO user");
     } else {
       res.status(200).send(result);

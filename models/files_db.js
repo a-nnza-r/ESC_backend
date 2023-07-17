@@ -28,7 +28,6 @@ export async function uploadFiles(epf_id, files) {
       );
     });
   } catch (e) {
-    console.error(e);
     throw e;
   } finally {
     await pool.end();
@@ -50,15 +49,12 @@ export async function getFiles(epf_id) {
       const file_path = path.join(download_location, file_name);
       fs.writeFile(file_path, file_data, (err) => {
         if (err) {
-          console.log("Error", err);
           throw err;
         }
-        console.log("File saved: ", file_path);
       });
     });
     return file_metadata;
   } catch (e) {
-    console.error(e);
     throw e;
   } finally {
     pool.end();
@@ -73,7 +69,6 @@ export async function deleteFiles(file_ids) {
     ]);
     return res.rowCount;
   } catch (e) {
-    console.error(e);
     throw e;
   } finally {
     pool.end();

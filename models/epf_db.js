@@ -18,8 +18,12 @@ export async function count_outstanding_EPF() {
     `SELECT COUNT(*) FROM EPFS WHERE status != $1`,
     ["Approved"]
   );
-  const updateQuery = `UPDATE EXCO SET outstanding_epf=$1`;
-  await pool.query(updateQuery, [result["rows"][0]["count"]]);
+  await pool.query(`UPDATE EXCO SET outstanding_epf=$1`, [result["rows"][0]["count"]]);
+  
+  await pool.query(`UPDATE OSL SET outstanding_epf=$1`, [result["rows"][0]["count"]]);
+
+  await pool.query(`UPDATE ROOT SET outstanding_epf=$1`, [result["rows"][0]["count"]]);
+
   await pool.end();
 
   //for testing
