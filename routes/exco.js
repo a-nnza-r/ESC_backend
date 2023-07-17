@@ -14,6 +14,7 @@ import {
   getEXCOEPFs,
   updateEXCO,
   deleteEXCO,
+  getEXCOsByAttribute,
 } from "../models/exco_db.js";
 const router = express.Router();
 
@@ -92,6 +93,21 @@ router.delete("/deleteEXCO", async (req, res) => {
     } else {
       res.status(404).send("EXCO user not found or could not delete");
     }
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
+});
+
+router.get("/getEXCOsByAttribute", async (req, res) => {
+  const data = req.body;
+  try {
+    const result = await getEXCOsByAttribute(data);
+
+    if (!result) {
+      return res.status(404).send("EXCO with such attributes does not exist");
+    }
+    res.status(200).send(result);
   } catch (err) {
     console.error(err);
     res.status(500).send("Server Error");
