@@ -3,19 +3,14 @@ Logic for EXCO Routes
 */
 
 import express from "express";
+import cors from 'cors';
+const app = express()
+app.use(cors())
+app.use(express.json())
 import multer from "multer";
 const upload = multer({ storage: multer.memoryStorage() });
 import { uploadFiles, getFiles, deleteFiles } from "../models/files_db.js";
 const router = express.Router();
-import pg from "pg";
-const { Pool } = pg;
-const credentials = {
-  host: "127.0.0.1",
-  user: "postgres",
-  port: 5432,
-  password: "123",
-  database: "esc_db",
-};
 
 router.post("/uploadFiles", upload.array("Files", 3), async (req, res) => {
   try {

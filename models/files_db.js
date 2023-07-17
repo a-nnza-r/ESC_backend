@@ -3,18 +3,18 @@ Logic for Users DB
 */
 import pg from "pg";
 const { Pool } = pg;
-//Add own path, add config file later
-var download_location = "/Users/ansarahmed/Downloads";
 import fs from "fs";
 import path from "path";
 
 const credentials = {
-  host: "127.0.0.1",
-  user: "postgres",
-  port: 5432,
-  password: "123",
-  database: "esc_db",
+  host: process.env.HOST,
+  user: process.env.USER,
+  port: process.env.PORT,
+  password: process.env.PASSWORD,
+  database: process.env.DATABASE
 };
+
+var download_location = process.env.DOWNLOADPATH
 
 export async function uploadFiles(epf_id, files) {
   const pool = new Pool(credentials);

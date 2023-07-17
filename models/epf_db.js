@@ -2,14 +2,16 @@
 Logic for EPF DB
 */
 import pg from "pg";
+import dotenv from 'dotenv';
+dotenv.config()
 const { Pool } = pg;
 
 const credentials = {
-  host: "127.0.0.1",
-  user: "postgres",
-  port: 5432,
-  password: "123",
-  database: "esc_db",
+  host: process.env.HOST,
+  user: process.env.USER,
+  port: process.env.PORT,
+  password: process.env.PASSWORD,
+  database: process.env.DATABASE,
 };
 
 export async function count_outstanding_EPF() {

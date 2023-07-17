@@ -5,11 +5,11 @@ import pg from "pg";
 const { Pool } = pg;
 
 const credentials = {
-  host: "127.0.0.1",
-  user: "postgres",
-  port: 5432,
-  password: "123",
-  database: "esc_db",
+  host: process.env.HOST,
+  user: process.env.USER,
+  port: process.env.PORT,
+  password: process.env.PASSWORD,
+  database: process.env.DATABASE,
 };
 
 export async function createROOT(name, email) {
