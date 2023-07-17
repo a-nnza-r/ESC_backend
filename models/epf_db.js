@@ -268,7 +268,7 @@ export async function createEPF(
   const query = `INSERT INTO EPFS(${column_names}) VALUES (${columnParams}) RETURNING epf_id`;
   const new_epf_id = await pool.query(query, values);
   await pool.end();
-  return new_epf_id["rows"][0]["epf_id"]
+  return new_epf_id["rows"][0]["epf_id"];
 }
 
 export async function getEPF(epf_id) {
@@ -480,4 +480,53 @@ export async function deleteEPF(epf_id) {
   const result = await pool.query(query, [epf_id]);
   await pool.end();
   return result.rowCount;
+}
+
+export async function getEPFbyAttrbute(attributes) {
+  const pool = new Pool(credentials);
+
+  const keys = Object.keys(attributes).filter((key) => key !== "sort");
+
+  // Check for required properties in attribute objects
+  for (const key of keys) {
+    if (
+      !attributes[key].hasOwnProperty("value") ||
+      !attributes[key].hasOwnProperty("operator")
+    ) {
+      throw new Error(
+        `Attribute "${key}" must have "value" and "operator" properties`
+      );
+    }
+  }
+
+  const conditions = keys.map(
+    (key, index) => `${key}${attributes[key].operator}$${index + 1}`
+  );
+
+  const values = keys.map((key) => attributes[key].value);
+
+  let query = `SELECT * FROM EPFS WHERE ${conditions.join(" AND ")}`;
+
+  if (attributes.sort) {
+    // Additional check for required properties in "sort" attribute
+    if (
+      !attributes.sort.hasOwnProperty("column") ||
+      !attributes.sort.hasOwnProperty("direction")
+    ) {
+      throw new Error(
+        `Sort property must have "column" and "direction" properties`
+      );
+    }
+    query += ` ORDER BY ${attributes.sort.column} ${attributes.sort.direction}`;
+  }
+
+  const result = await pool.query(query, values);
+
+  await pool.end();
+
+  if (result.rowCount === 0) {
+    return null;
+  }
+
+  return result["rows"];
 }

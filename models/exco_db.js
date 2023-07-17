@@ -56,3 +56,47 @@ export async function deleteEXCO(user_id) {
   await pool.end();
   return res; // Returns the result object from the database query execution
 }
+
+export async function getEXCOsByAttribute(attributes) {
+  const pool = new Pool(credentials);
+
+  const keys = Object.keys(attributes).filter((key) => key !== "sort");
+
+  // Check for required properties in attribute objects
+  for (const key of keys) {
+    if (
+      !attributes[key].hasOwnProperty("value") ||
+      !attributes[key].hasOwnProperty("operator")
+    ) {
+      throw new Error(
+        `Attribute "${key}" must have "value" and "operator" properties`
+      );
+    }
+  }
+
+  const conditions = keys.map(
+    (key, index) => `${key}${attributes[key].operator}$${index + 1}`
+  );
+
+  const values = keys.map((key) => attributes[key].value);
+
+  let query = `SELECT * FROM EXCO WHERE ${conditions.join(" AND ")}`;
+
+  if (attributes.sort) {
+    // Additional check for required properties in "sort" attribute
+    if (
+      !attributes.sort.hasOwnProperty("column") ||
+      !attributes.sort.hasOwnProperty("direction")
+    ) {
+      throw new Error(
+        `Sort property must have "column" and "direction" properties`
+      );
+    }
+    query += ` ORDER BY ${attributes.sort.column} ${attributes.sort.direction}`;
+  }
+
+  const result = await pool.query(query, values);
+
+  await pool.end();
+  return result.rows;
+}

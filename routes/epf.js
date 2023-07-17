@@ -10,6 +10,7 @@ import {
   getEPFs,
   updateEPF,
   deleteEPF,
+  getEPFbyAttrbute,
 } from "../models/epf_db.js";
 const router = express.Router();
 
@@ -252,6 +253,21 @@ router.delete("/deleteEPF", async (req, res) => {
     }
   } catch (err) {
     console.error(err);
+    res.status(500).send("Server Error");
+  }
+});
+
+router.get("/getEPFbyAttribute", async (req, res) => {
+  try {
+    const data = req.body;
+    const result = await getEPFbyAttrbute(data);
+    if (result === null) {
+      res.status(404).send("No EPFs found for the given attributes");
+    } else {
+      res.status(200).send(result);
+    }
+  } catch (err) {
+    console.log(err);
     res.status(500).send("Server Error");
   }
 });

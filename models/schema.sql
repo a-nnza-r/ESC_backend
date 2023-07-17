@@ -138,7 +138,7 @@ CREATE TABLE FILES (
 
     CONSTRAINT fk_epf
         FOREIGN KEY(epf_id)
-            REFERENCES EPFS(epf_id)
+            REFERENCES EPFS(epf_id) ON DELETE CASCADE 
 );
 
 
