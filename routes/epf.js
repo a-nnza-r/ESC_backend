@@ -3,10 +3,10 @@ Logic for EPF Routes
 */
 
 import express from "express";
-import cors from 'cors';
-const app = express()
-app.use(cors())
-app.use(express.json())
+import cors from "cors";
+const app = express();
+app.use(cors());
+app.use(express.json());
 import {
   count_outstanding_EPF,
   createEPF,
@@ -261,7 +261,11 @@ router.delete("/deleteEPF", async (req, res) => {
   }
 });
 
-router.get("/getEPFbyAttribute", async (req, res) => {
+// this End point is essentially does the task of an get request
+// however since the query for specific type of user can be rather complicated
+// we use a post request that enables the use of JSON body data to be passed as part
+// of the request.
+router.post("/getEPFbyAttribute", async (req, res) => {
   try {
     const data = req.body;
     const result = await getEPFbyAttrbute(data);
