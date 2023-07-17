@@ -265,9 +265,10 @@ export async function createEPF(
     sectionG7
   );
 
-  const query = `INSERT INTO EPFS(${column_names}) VALUES (${columnParams})`;
-  await pool.query(query, values);
+  const query = `INSERT INTO EPFS(${column_names}) VALUES (${columnParams}) RETURNING epf_id`;
+  const new_epf_id = await pool.query(query, values);
   await pool.end();
+  return new_epf_id["rows"][0]["epf_id"]
 }
 
 export async function getEPF(epf_id) {

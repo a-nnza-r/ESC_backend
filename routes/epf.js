@@ -16,7 +16,7 @@ const router = express.Router();
 router.post("/createEPF", async (req, res) => {
   const data = req.body;
   try {
-    await createEPF(
+    const epf_id = await createEPF(
       data["status"],
       data["exco_user_id"],
       data["A_name"],
