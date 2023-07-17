@@ -5,16 +5,18 @@ import pg from "pg";
 const { Pool } = pg;
 import fs from "fs";
 import path from "path";
+import dotenv from "dotenv";
+dotenv.config();
 
 const credentials = {
   host: process.env.HOST,
   user: process.env.USER,
   port: process.env.PORT,
   password: process.env.PASSWORD,
-  database: process.env.DATABASE
+  database: process.env.DATABASE,
 };
 
-var download_location = process.env.DOWNLOADPATH
+var download_location = process.env.DOWNLOADPATH;
 
 export async function uploadFiles(epf_id, files) {
   const pool = new Pool(credentials);

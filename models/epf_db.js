@@ -2,8 +2,8 @@
 Logic for EPF DB
 */
 import pg from "pg";
-import dotenv from 'dotenv';
-dotenv.config()
+import dotenv from "dotenv";
+dotenv.config();
 const { Pool } = pg;
 
 const credentials = {
@@ -20,11 +20,17 @@ export async function count_outstanding_EPF() {
     `SELECT COUNT(*) FROM EPFS WHERE status != $1`,
     ["Approved"]
   );
-  await pool.query(`UPDATE EXCO SET outstanding_epf=$1`, [result["rows"][0]["count"]]);
-  
-  await pool.query(`UPDATE OSL SET outstanding_epf=$1`, [result["rows"][0]["count"]]);
+  await pool.query(`UPDATE EXCO SET outstanding_epf=$1`, [
+    result["rows"][0]["count"],
+  ]);
 
-  await pool.query(`UPDATE ROOT SET outstanding_epf=$1`, [result["rows"][0]["count"]]);
+  await pool.query(`UPDATE OSL SET outstanding_epf=$1`, [
+    result["rows"][0]["count"],
+  ]);
+
+  await pool.query(`UPDATE ROOT SET outstanding_epf=$1`, [
+    result["rows"][0]["count"],
+  ]);
 
   await pool.end();
 

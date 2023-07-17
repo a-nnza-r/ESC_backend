@@ -3,6 +3,8 @@ Logic for ROOT DB
 */
 import pg from "pg";
 const { Pool } = pg;
+import dotenv from "dotenv";
+dotenv.config();
 
 const credentials = {
   host: process.env.HOST,
