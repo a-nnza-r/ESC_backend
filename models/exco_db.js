@@ -3,13 +3,15 @@ Logic for Users DB
 */
 import pg from "pg";
 const { Pool } = pg;
+import dotenv from "dotenv";
+dotenv.config();
 
 const credentials = {
-  host: "127.0.0.1",
-  user: "postgres",
-  port: 5432,
-  password: "123",
-  database: "esc_db",
+  host: process.env.HOST,
+  user: process.env.USER,
+  port: process.env.PORT,
+  password: process.env.PASSWORD,
+  database: process.env.DATABASE,
 };
 
 export async function createEXCO(name, email) {
@@ -42,7 +44,7 @@ export async function getEXCOEPFs(exco_user_id) {
   return result["rows"];
 }
 
-export async function updateEXCO(user_id, name, email, password) {
+export async function updateEXCO(user_id, name, email) {
   const pool = new Pool(credentials);
   const query = "UPDATE EXCO SET name=$1, email=$2 WHERE user_id=$3";
   await pool.query(query, [name, email, user_id]);

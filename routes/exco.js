@@ -3,6 +3,10 @@ Logic for EXCO Routes
 */
 
 import express from "express";
+import cors from "cors";
+const app = express();
+app.use(cors());
+app.use(express.json());
 import {
   createEXCO,
   getEXCOs,
@@ -36,11 +40,11 @@ router.get("/getEXCOs", async (req, res) => {
 });
 
 router.get("/getEXCO", async (req, res) => {
-  const data = req.body;
+  const data = req.query;
   try {
-    const result = await getEXCO(data["user_id"]);
+    const result = await getEXCO(data.user_id);
 
-    if (!result) {
+    if (result.length === 0) {
       return res.status(404).send("EXCO not found");
     }
     res.status(200).send(result);
@@ -52,8 +56,8 @@ router.get("/getEXCO", async (req, res) => {
 
 router.get("/getEXCOEPFs", async (req, res) => {
   try {
-    const data = req.body;
-    const result = await getEXCOEPFs(data["exco_user_id"]);
+    const data = req.query;
+    const result = await getEXCOEPFs(data.exco_user_id);
     if (result.length === 0) {
       res.status(404).send("No EPFs found for the given EXCO user");
     } else {
@@ -95,7 +99,11 @@ router.delete("/deleteEXCO", async (req, res) => {
   }
 });
 
-router.get("/getEXCOsByAttribute", async (req, res) => {
+// this End point is essentially does the task of an get request
+// however since the query for specific type of user can be rather complicated
+// we use a post request that enables the use of JSON body data to be passed as part
+// of the request.
+router.post("/getEXCOsByAttribute", async (req, res) => {
   const data = req.body;
   try {
     const result = await getEXCOsByAttribute(data);
