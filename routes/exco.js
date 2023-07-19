@@ -43,14 +43,14 @@ router.get("/getEXCO", async (req, res) => {
   const data = req.query;
   try {
     const result = await getEXCO(data.user_id);
-
-    if (result.length === 0) {
-      return res.status(404).send("EXCO not found");
-    }
     res.status(200).send(result);
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Server Error");
+    if (err.message === "EXCO not found") {
+      res.status(404).send("EXCO not found");
+    } else {
+      console.error(err);
+      res.status(500).send("Server Error");
+    }
   }
 });
 
@@ -72,15 +72,11 @@ router.get("/getEXCOEPFs", async (req, res) => {
 router.put("/updateEXCO", async (req, res) => {
   try {
     const data = req.body;
-    const updatedEXCO = await updateEXCO(
-      data["user_id"],
-      data["name"],
-      data["email"]
-    );
+    await updateEXCO(data["user_id"], data["name"], data["email"]);
     res.status(200).send("Updated EXCO user");
   } catch (err) {
     console.error(err);
-    res.status(500).send("Server Error");
+    res.status(500).send(`Server Error : ${err.message}`);
   }
 });
 
