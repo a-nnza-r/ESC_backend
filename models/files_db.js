@@ -40,7 +40,7 @@ export async function getFiles(epf_id) {
   const pool = new Pool(credentials);
   try {
     const result = await pool.query(
-      `SELECT file_id, file_name, file_data from FILES where epf_id=$1`,
+      `SELECT file_id, file_name, file_data from FILES where epf_id=$1 AND is_deleted = false`,
       [epf_id]
     );
     const files = result.rows;
@@ -66,7 +66,7 @@ export async function getFiles(epf_id) {
 export async function deleteFiles(file_ids) {
   const pool = new Pool(credentials);
   try {
-    const res = await pool.query(`DELETE FROM FILES WHERE file_id=ANY($1) `, [
+    const res = await pool.query(`UPDATE FILES SET is_deleted = true WHERE file_id=ANY($1)`, [
       file_ids,
     ]);
     return res.rowCount;

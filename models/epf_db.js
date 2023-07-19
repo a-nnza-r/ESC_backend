@@ -17,7 +17,7 @@ const credentials = {
 export async function count_outstanding_EPF() {
   const pool = new Pool(credentials);
   const result = await pool.query(
-    `SELECT COUNT(*) FROM EPFS WHERE status != $1`,
+    `SELECT COUNT(*) FROM EPFS WHERE status != $1 AND is_deleted = false`,
     ["Approved"]
   );
   await pool.query(`UPDATE EXCO SET outstanding_epf=$1`, [
@@ -285,7 +285,7 @@ export async function createEPF(
 
 export async function getEPF(epf_id) {
   const pool = new Pool(credentials);
-  const result = await pool.query("SELECT * FROM EPFS WHERE epf_id=$1", [
+  const result = await pool.query("SELECT * FROM EPFS WHERE epf_id=$1 AND is_deleted = false", [
     epf_id,
   ]);
   await pool.end();
@@ -297,7 +297,7 @@ export async function getEPF(epf_id) {
 
 export async function getEPFs() {
   const pool = new Pool(credentials);
-  const result = await pool.query(`SELECT * FROM EPFS`);
+  const result = await pool.query(`SELECT * FROM EPFS WHERE is_deleted = false`);
   await pool.end();
   return result["rows"];
 }
@@ -480,7 +480,7 @@ export async function updateEPF(
     G_comments_ROOT,
   ];
 
-  const query = `UPDATE EPFS SET (${columnNames}) = (${columnParams}) WHERE epf_id=$1`;
+  const query = `UPDATE EPFS SET (${columnNames}) = (${columnParams}) WHERE epf_id=$1 AND is_deleted = false`;
   let result = await pool.query(query, values);
   await pool.end();
   return result.rowCount;
@@ -488,8 +488,11 @@ export async function updateEPF(
 
 export async function deleteEPF(epf_id) {
   const pool = new Pool(credentials);
-  const query = "DELETE FROM EPFS WHERE epf_id=$1";
+  const query = "UPDATE EPFS SET is_deleted = true WHERE epf_id = $1 AND is_deleted = false";
   const result = await pool.query(query, [epf_id]);
+  await pool.query(`UPDATE FILES SET is_deleted = true WHERE epf_id = $1 AND is_deleted = false`, [
+    epf_id,
+  ]);
   await pool.end();
   return result.rowCount;
 }
@@ -517,7 +520,7 @@ export async function getEPFbyAttrbute(attributes) {
 
   const values = keys.map((key) => attributes[key].value);
 
-  let query = `SELECT * FROM EPFS WHERE ${conditions.join(" AND ")}`;
+  let query = `SELECT * FROM EPFS WHERE ${conditions.join(" AND ")} AND is_deleted = false`;
 
   if (attributes.sort) {
     // Additional check for required properties in "sort" attribute

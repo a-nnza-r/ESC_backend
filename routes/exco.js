@@ -43,7 +43,11 @@ router.get("/getEXCO", async (req, res) => {
   const data = req.query;
   try {
     const result = await getEXCO(data.user_id);
-    res.status(200).send(result);
+    if(result.length===0) {
+      res.status(404).send("EXCO not found");
+    } else {
+      res.status(200).send(result);
+    }
   } catch (err) {
     if (err.message === "EXCO not found") {
       res.status(404).send("EXCO not found");
@@ -82,8 +86,8 @@ router.put("/updateEXCO", async (req, res) => {
 
 router.delete("/deleteEXCO", async (req, res) => {
   try {
-    const data = req.body;
-    const deletedEXCO = await deleteEXCO(data["user_id"]);
+    const data = req.query;
+    const deletedEXCO = await deleteEXCO(data.user_id);
     if (deletedEXCO.rowCount > 0) {
       res.status(200).send("Deleted EXCO user");
     } else {

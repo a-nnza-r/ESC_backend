@@ -69,8 +69,8 @@ router.put("/updateROOT", async (req, res) => {
 
 router.delete("/deleteROOT", async (req, res) => {
   try {
-    const data = req.body;
-    const deletedROOT = await deleteROOT(data["user_id"]);
+    const data = req.query;
+    const deletedROOT = await deleteROOT(data.user_id);
     if (deletedROOT.rowCount > 0) {
       res.status(200).send("Deleted ROOT user");
     } else {

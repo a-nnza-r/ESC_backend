@@ -61,7 +61,7 @@ export async function createEXCO(name, email, pool = defaultPool) {
 export async function getEXCOs(pool = defaultPool) {
   const client = await pool.connect();
   try {
-    const result = await client.query(`SELECT * FROM EXCO;`);
+    const result = await client.query(`SELECT * FROM EXCO WHERE is_deleted = false;`);
     return result["rows"];
   } finally {
     client.release();
@@ -74,7 +74,7 @@ export async function getEXCO(user_id, pool = defaultPool) {
   }
   const client = await pool.connect();
   try {
-    const query = "SELECT * FROM EXCO WHERE user_id=$1";
+    const query = "SELECT * FROM EXCO WHERE user_id=$1 AND is_deleted = false";
     const result = await client.query(query, [user_id]);
     return result["rows"];
   } finally {
@@ -85,7 +85,7 @@ export async function getEXCO(user_id, pool = defaultPool) {
 export async function getEXCOEPFs(exco_user_id, pool = defaultPool) {
   const client = await pool.connect();
   try {
-    const query = "SELECT * FROM EPFS WHERE exco_user_id=$1";
+    const query = "SELECT * FROM EPFS WHERE exco_user_id=$1 AND is_deleted = false";
     const result = await client.query(query, [exco_user_id]);
     return result["rows"];
   } finally {
@@ -111,7 +111,7 @@ export async function updateEXCO(user_id, name, email, pool = defaultPool) {
     if (!emailRegex.test(email)) {
       throw new Error("Invalid email format.");
     }
-    const query = "UPDATE EXCO SET name=$1, email=$2 WHERE user_id=$3";
+    const query = "UPDATE EXCO SET name=$1, email=$2 WHERE user_id=$3 AND is_deleted = false";
     const response = await client.query(query, [name, email, user_id]);
     // Check if any row was affected
     if (response.rowCount == 0) {
@@ -132,7 +132,7 @@ export async function deleteEXCO(user_id, pool = defaultPool) {
   const client = await pool.connect();
 
   try {
-    const query = "DELETE FROM EXCO WHERE user_id=$1";
+    const query = "UPDATE EXCO SET is_deleted = true WHERE user_id = $1 AND is_deleted = false;";
     const res = await client.query(query, [user_id]);
 
     // Returns the result object from the database query execution
@@ -200,7 +200,7 @@ export async function getEXCOsByAttribute(attributes, pool = defaultPool) {
   );
 
   const values = keys.map((key) => attributes[key].value);
-  let query = `SELECT * FROM EXCO WHERE ${conditions.join(" AND ")}`;
+  let query = `SELECT * FROM EXCO WHERE ${conditions.join(" AND ")} AND is_deleted = false`;
 
   if (attributes.sort) {
     // Additional check for required properties in "sort" attribute

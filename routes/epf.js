@@ -245,9 +245,9 @@ router.put("/updateEPF", async (req, res) => {
 });
 
 router.delete("/deleteEPF", async (req, res) => {
-  const data = req.body;
+  const data = req.query;
   try {
-    const deletedEPF = await deleteEPF(data["epf_id"]);
+    const deletedEPF = await deleteEPF(data.epf_id);
     if (deletedEPF > 0) {
       const outstanding_EPF_count = await count_outstanding_EPF();
       res

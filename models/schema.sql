@@ -4,21 +4,24 @@ CREATE TABLE EXCO (
     user_id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
-    outstanding_epf INT 
+    outstanding_epf INT,
+    is_deleted BOOLEAN DEFAULT false
 );
 
 CREATE TABLE OSL (
     user_id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
-    outstanding_epf INT 
+    outstanding_epf INT,
+    is_deleted BOOLEAN DEFAULT false
 );
 
 CREATE TABLE ROOT (
     user_id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
-    outstanding_epf INT 
+    outstanding_epf INT,
+    is_deleted BOOLEAN DEFAULT false
 );
 
 CREATE TABLE epfs (
@@ -125,9 +128,11 @@ CREATE TABLE epfs (
     g_comments_osl VARCHAR(300),
     g_comments_root VARCHAR(300),
 
+    is_deleted BOOLEAN DEFAULT false,
+
     CONSTRAINT fk_exco
         FOREIGN KEY(exco_user_id)
-            REFERENCES exco(user_id)
+            REFERENCES exco(user_id) 
 );
 
 CREATE TABLE FILES (
@@ -136,9 +141,11 @@ CREATE TABLE FILES (
     file_name VARCHAR(300) NOT NULL,
     file_data BYTEA NOT NULL,
 
+    is_deleted BOOLEAN DEFAULT false,
+
     CONSTRAINT fk_epf
         FOREIGN KEY(epf_id)
-            REFERENCES EPFS(epf_id) ON DELETE CASCADE 
+            REFERENCES EPFS(epf_id) 
 );
 
 

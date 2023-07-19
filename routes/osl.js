@@ -69,8 +69,8 @@ router.put("/updateOSL", async (req, res) => {
 
 router.delete("/deleteOSL", async (req, res) => {
   try {
-    const data = req.body;
-    const deletedOSL = await deleteOSL(data["user_id"]);
+    const data = req.query;
+    const deletedOSL = await deleteOSL(data.user_id);
     if (deletedOSL.rowCount > 0) {
       res.status(200).send("Deleted OSL user");
     } else {
