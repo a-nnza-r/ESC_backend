@@ -7,8 +7,8 @@ const {Pool} = pg
 const credentials = {
     host: '127.0.0.1',
     user: 'postgres',
-    port: 5432,
-    password: '123',
+    port: 5433,
+    password: 'password',
     database: 'esc_db'
 }
 
