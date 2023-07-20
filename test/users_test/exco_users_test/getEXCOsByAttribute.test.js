@@ -1,96 +1,69 @@
-const { getEXCOsByAttribute } = require("../../../models/exco_db");
-const { createPool, deleteFromTables } = require("./exco_test_utils");
+const { getEXCOsByAttribute, createEXCO } = require("../../../models/exco_db");
+const {
+  createPool,
+  deleteFromTables,
+  expectUserToMatch,
+} = require("./exco_test_utils");
 
 let pool;
 
 describe("getEXCOsByAttribute", () => {
+  let excoData1, excoData2;
+
   beforeAll(async () => {
     pool = await createPool();
-  }, 20000);
+  });
 
   beforeEach(async () => {
     await deleteFromTables(pool);
-    await pool.query(
-      "INSERT INTO EXCO (name, email) VALUES ('Test User', 'test@test.com')"
-    );
-    await pool.query(
-      "INSERT INTO EXCO (name, email) VALUES ('Albert', 'albert@test.com')"
-    );
+    excoData1 = await createEXCO("Test User", "test@test.com", pool);
+    excoData2 = await createEXCO("Albert", "albert@test.com", pool);
   });
 
-  test("Valid inputs: Retrieve EXCO records", async () => {
+  test("Test ID: 1 - Valid inputs: Retrieve EXCO records", async () => {
     const attributes = { name: { operator: "=", value: "Test User" } };
     const result = await getEXCOsByAttribute(attributes, pool);
-
-    result.forEach((res) => {
-      expect(res).toMatchObject({
-        name: "Test User",
-        email: "test@test.com",
-        outstanding_epf: null,
-      });
-    });
+    expect(result).toHaveLength(1);
+    expectUserToMatch(result[0], excoData1);
   });
 
-  test("Retrieve records with multiple filters", async () => {
+  test("Test ID: 2 - Retrieve records with multiple filters", async () => {
     const attributes = {
       name: { operator: "=", value: "Test User" },
       email: { operator: "=", value: "test@test.com" },
     };
     const result = await getEXCOsByAttribute(attributes, pool);
-
-    result.forEach((res) => {
-      expect(res).toMatchObject({
-        name: "Test User",
-        email: "test@test.com",
-        outstanding_epf: null,
-      });
-    });
+    expect(result).toHaveLength(1);
+    expectUserToMatch(result[0], excoData1);
   });
 
-  test("Retrieve records with invalid attribute", async () => {
-    await expect(
-      getEXCOsByAttribute({ dob: { operator: "=", value: "2000-01-01" } }, pool)
-    ).rejects.toThrowError(
-      new Error("Cannot read properties of undefined (reading 'includes')")
-    );
-  });
-
-  test("Sorting the resultset based on column in ascending order", async () => {
+  test("Test ID: 3 - Retrieve records with invalid attribute", async () => {
     const attributes = {
-      name: { operator: "=", value: "test" },
+      nonExistentAttribute: { operator: "=", value: "2000-01-01" },
+    };
+    await expect(getEXCOsByAttribute(attributes, pool)).rejects.toThrow();
+  });
+
+  test("Test ID: 4 - Sorting the resultset based on column in ascending order", async () => {
+    const attributes = {
       sort: { column: "name", direction: "ASC" },
     };
     const result = await getEXCOsByAttribute(attributes, pool);
-
-    expect(result).toEqual([]);
+    expect(result).toEqual([excoData2, excoData1]);
   });
 
-  test("Invalid column or direction in sort property", async () => {
+  test("Test ID: 5 - Invalid column or direction in sort property", async () => {
     const attributes = {
-      name: { operator: "=", value: "Test User" },
-      sort: { column: "name", direction: "ANY" },
+      sort: { column: "name", direction: "WrongDirection" },
     };
-    await expect(getEXCOsByAttribute(attributes, pool)).rejects.toThrowError(
+    await expect(getEXCOsByAttribute(attributes, pool)).rejects.toThrow(
       new Error(
         'Sort property must have "column" and "direction" properties and direction must be one of ASC, DESC'
       )
     );
   });
 
-  afterAll((done) => {
-    pool.connect((err, client, release) => {
-      if (err) {
-        console.error("Error acquiring client", err.stack);
-        done(err);
-      }
-      client.query("SELECT NOW()", (_err) => {
-        release();
-        if (_err) {
-          console.error("Error executing query", _err.stack);
-          done(_err);
-        }
-        done();
-      });
-    });
-  }, 60000);
+  afterAll(async () => {
+    await pool.end();
+  });
 });
