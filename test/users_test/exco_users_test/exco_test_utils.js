@@ -13,27 +13,33 @@ const testCredentials = {
 };
 
 // Create pool function
-function createPool() {
-  return new Pool(testCredentials);
+async function createPool() {
+  const pool = new Pool(testCredentials);
+  return pool;
 }
 
 async function deleteFromTables(pool) {
+  const client = await pool.connect();
   try {
-    await pool.query("TRUNCATE TABLE epfs CASCADE;");
+    await client.query("TRUNCATE TABLE epfs CASCADE;");
+    await client.query("TRUNCATE TABLE EXCO CASCADE;");
   } catch (e) {
-    console.error("Error on epfs truncate:", e.stack);
+    console.error("Error on truncating tables:", e.stack);
     throw e;
+  } finally {
+    client.release();
   }
+}
 
-  try {
-    await pool.query("TRUNCATE TABLE EXCO CASCADE;");
-  } catch (e) {
-    console.error("Error on EXCO truncate:", e.stack);
-    throw e;
-  }
+// Updated expectUserToMatch
+function expectUserToMatch(user, expectedProperties) {
+  Object.entries(expectedProperties).forEach(([key, value]) => {
+    expect(user[key]).toEqual(value);
+  });
 }
 
 module.exports = {
   createPool,
   deleteFromTables,
+  expectUserToMatch,
 };

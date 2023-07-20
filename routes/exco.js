@@ -21,11 +21,15 @@ const router = express.Router();
 router.post("/createEXCO", async (req, res) => {
   const data = req.body;
   try {
-    await createEXCO(data["name"], data["email"]);
+    const newUser = await createEXCO(data["name"], data["email"]); // newUser will contain the JSON object returned by createEXCO()
     res.status(201).send("Created EXCO user");
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Server error");
+    if (err.message === "Duplicate entry") {
+      res.status(400).send("Duplicate entry");
+    } else {
+      console.error(err);
+      res.status(500).send("Server error");
+    }
   }
 });
 
@@ -43,7 +47,7 @@ router.get("/getEXCO", async (req, res) => {
   const data = req.query;
   try {
     const result = await getEXCO(data.user_id);
-    if(result.length===0) {
+    if (result.length === 0) {
       res.status(404).send("EXCO not found");
     } else {
       res.status(200).send(result);
@@ -87,15 +91,20 @@ router.put("/updateEXCO", async (req, res) => {
 router.delete("/deleteEXCO", async (req, res) => {
   try {
     const data = req.query;
-    const deletedEXCO = await deleteEXCO(data.user_id);
-    if (deletedEXCO.rowCount > 0) {
-      res.status(200).send("Deleted EXCO user");
-    } else {
-      res.status(404).send("EXCO user not found or could not delete");
-    }
+    const user_id = parseInt(data.user_id, 10); // Make sure user_id is interpreted as a number
+    const deletedEXCO = await deleteEXCO(user_id); // Deleted user details are in `deletedEXCO`
+    res.status(200).send("Deleted EXCO user");
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Server Error");
+    if (err.message === "EXCO user has already been delete") {
+      res.status(404).send(err.message);
+    } else if (err.message === "EXCO user does not exist") {
+      res.status(404).send(err.message);
+    } else if (err.message === "User ID must be a positive integer") {
+      res.status(400).send(err.message);
+    } else {
+      console.error(err);
+      res.status(500).send("Server Error");
+    }
   }
 });
 
@@ -107,7 +116,6 @@ router.post("/getEXCOsByAttribute", async (req, res) => {
   const data = req.body;
   try {
     const result = await getEXCOsByAttribute(data);
-
     if (!result) {
       return res.status(404).send("EXCO with such attributes does not exist");
     }
