@@ -6,6 +6,9 @@ import dotenv from "dotenv";
 dotenv.config();
 const { Pool } = pg;
 
+import path from "path";
+import fs from "fs";
+
 const credentials = {
   host: process.env.HOST,
   user: process.env.USER,
@@ -13,6 +16,9 @@ const credentials = {
   password: process.env.PASSWORD,
   database: process.env.DATABASE,
 };
+
+const defaultPool = new Pool(credentials); // Declare the pool outside of functions
+
 
 export async function count_outstanding_EPF() {
   const pool = new Pool(credentials);
@@ -120,9 +126,11 @@ export async function createEPF(
   G_7_2,
   G_7_3,
   G_comments_OSL,
-  G_comments_ROOT
+  G_comments_ROOT,
+
+  pool = defaultPool
 ) {
-  const pool = new Pool(credentials);
+
   const columnParams = new Array(82)
     .fill()
     .map((_, i) => `$${i + 1}`)
@@ -277,22 +285,70 @@ export async function createEPF(
     sectionG7
   );
 
-  const query = `INSERT INTO EPFS(${column_names}) VALUES (${columnParams}) RETURNING epf_id`;
-  const new_epf_id = await pool.query(query, values);
-  await pool.end();
-  return new_epf_id["rows"][0]["epf_id"];
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    //Check for datatypes
+    const jsonFilePath = path.join(__dirname, 'epf_db_datatypes.json');
+    const jsonData = fs.readFileSync(jsonFilePath, 'utf-8');
+    const data = Object.values(JSON.parse(jsonData));
+
+    //console.log(values)
+
+    for(let i=0;i<values.length;i++) {
+      if(typeof values[i]!==data[i]) {
+        throw new Error("Unexpected data type");
+      }
+    }
+
+    //Check for valid exco_user_id
+    const valid_exco_user_id = await pool.query(`SELECT COUNT(*) FROM EXCO WHERE user_id=$1`, [exco_user_id])
+    if(valid_exco_user_id.rows[0]["count"]==0) {
+        throw new Error("Non-existent exco user id");
+    }
+
+    //Check for event name
+    if(B_event_name.trim().length==0) {
+        throw new Error("Event name missing");
+    }
+
+    const query = `INSERT INTO EPFS(${column_names}) VALUES (${columnParams}) RETURNING epf_id`;
+    const result = await pool.query(query, values);
+    //const new_epf_id = await pool.query(query, values);
+    await client.query("COMMIT")
+    return result.rows[0];
+    //return new_epf_id["rows"][0]["epf_id"];
+  } catch (e) {
+    await client.query("ROLLBACK");
+    throw e;
+  } finally {
+    client.release();
+  }
 }
 
-export async function getEPF(epf_id) {
-  const pool = new Pool(credentials);
-  const result = await pool.query("SELECT * FROM EPFS WHERE epf_id=$1 AND is_deleted = false", [
-    epf_id,
-  ]);
-  await pool.end();
-  if (result.rowCount === 0) {
-    return null;
+export async function getEPF(epf_id,pool = defaultPool) {
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const result = await pool.query("SELECT * FROM EPFS WHERE epf_id=$1 AND is_deleted = false", [
+      epf_id,
+    ]);
+    await client.query("COMMIT")
+    if (result.rowCount === 0) {
+      return null;
+    }
+    return result["rows"];
+
+  } catch(e) {
+    await client.query("ROLLBACK");
+    throw e;
+  } finally {
+    client.release();
   }
-  return result["rows"];
 }
 
 export async function getEPFs() {
