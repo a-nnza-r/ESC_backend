@@ -2,85 +2,283 @@
 Logic for EPF Routes
 */
 
-import express from 'express'
-import {count_outstanding_EPF, createEPF, getEPF, getEPFs, updateEPF, deleteEPF} from '../models/epf_db.js'
-const router = express.Router()
+import express from "express";
+import cors from "cors";
+const app = express();
+app.use(cors());
+app.use(express.json());
+import {
+  count_outstanding_EPF,
+  createEPF,
+  getEPF,
+  getEPFs,
+  updateEPF,
+  deleteEPF,
+  getEPFbyAttrbute,
+} from "../models/epf_db.js";
+const router = express.Router();
 
-router.post("/createEPF", async (req,res)=>{
+router.post("/createEPF", async (req, res) => {
+  const data = req.body;
+
+  try {
+    const epf_id = await createEPF(
+      data["status"],
+      data["exco_user_id"],
+      data["a_name"],
+      data["a_student_id"],
+      data["a_organisation"],
+      data["a_contact_number"],
+      data["a_email"],
+      data["a_comments_osl"],
+      data["a_comments_root"],
+      data["b_event_name"],
+      data["b_target_audience"],
+      data["b_event_schedule"],
+      data["b_expected_turnout"],
+      data["b_event_objective"],
+      data["b_comments_osl"],
+      data["b_comments_root"],
+      data["c1_date"],
+      data["c1_time"],
+      data["c1_activity_and_description"],
+      data["c1_venue"],
+      data["c2_date"],
+      data["c2_time"],
+      data["c2_activity_and_description"],
+      data["c2_venue"],
+      data["c3_date"],
+      data["c3_time"],
+      data["c3_activity_and_description"],
+      data["c3_venue"],
+      data["c3_cleanup_date"],
+      data["c3_cleanup_time"],
+      data["c3_cleanup_activity_and_description"],
+      data["c3_cleanup_venue"],
+      data["c_comments_osl"],
+      data["c_comments_root"],
+      data["d1a_club_income_fund"],
+      data["d1a_osl_seed_fund"],
+      data["d1a_donation"],
+      data["d1b_revenue"],
+      data["d1b_donation_or_scholarship"],
+      data["d1b_total_source_of_funds"],
+      data["d11_items_goods_services"],
+      data["d11_price"],
+      data["d11_quantity"],
+      data["d11_amount"],
+      data["d11_total_revenue"],
+      data["d2_items"],
+      data["d2_reason_for_purchase"],
+      data["d2_venue"],
+      data["d2_total_expenditure"],
+      data["d_comments_osl"],
+      data["d_comments_root"],
+      data["e_personal_data"],
+      data["e_comments_osl"],
+      data["e_comments_root"],
+      data["f_name"],
+      data["f_student_id"],
+      data["f_position"],
+      data["f_comments_osl"],
+      data["f_comments_root"],
+      data["g_1_1"],
+      data["g_1_2"],
+      data["g_1_3"],
+      data["g_2_1"],
+      data["g_2_2"],
+      data["g_2_3"],
+      data["g_3_1"],
+      data["g_3_2"],
+      data["g_3_3"],
+      data["g_4_1"],
+      data["g_4_2"],
+      data["g_4_3"],
+      data["g_5_1"],
+      data["g_5_2"],
+      data["g_5_3"],
+      data["g_6_1"],
+      data["g_6_2"],
+      data["g_6_3"],
+      data["g_7_1"],
+      data["g_7_2"],
+      data["g_7_3"],
+      data["g_comments_osl"],
+      data["g_comments_root"]
+    );
+    const outstanding_EPF_count = await count_outstanding_EPF();
+    res
+      .status(201)
+      .send(`Created EPF, Outstanding EPF Count: ${outstanding_EPF_count}`);
+  } catch (err) {
+    console.log("Failed to create EPF.", err);
+    res.status(500).send("Failed to create EPF.");
+  }
+});
+
+router.get("/getEPF", async (req, res) => {
+  try {
+    const data = req.query;
+    const result = await getEPF(data.epf_id);
+    if (result === null) {
+      res.status(404).send("No EPFs found for the given EPF id");
+    } else {
+      res.status(200).send(result);
+    }
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("Server Error");
+  }
+});
+
+router.get("/getEPFs", async (req, res) => {
+  try {
+    const result = await getEPFs();
+    res.status(200).send(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
+});
+
+router.put("/updateEPF", async (req, res) => {
+  const data = req.body;
+  try {
+    const updateCheck = await updateEPF(
+      data["epf_id"],
+      data["status"],
+      data["exco_user_id"],
+      data["a_name"],
+      data["a_student_id"],
+      data["a_organisation"],
+      data["a_contact_number"],
+      data["a_email"],
+      data["a_comments_osl"],
+      data["a_comments_root"],
+      data["b_event_name"],
+      data["b_target_audience"],
+      data["b_event_schedule"],
+      data["b_expected_turnout"],
+      data["b_event_objective"],
+      data["b_comments_osl"],
+      data["b_comments_root"],
+      data["c1_date"],
+      data["c1_time"],
+      data["c1_activity_and_description"],
+      data["c1_venue"],
+      data["c2_date"],
+      data["c2_time"],
+      data["c2_activity_and_description"],
+      data["c2_venue"],
+      data["c3_date"],
+      data["c3_time"],
+      data["c3_activity_and_description"],
+      data["c3_venue"],
+      data["c3_cleanup_date"],
+      data["c3_cleanup_time"],
+      data["c3_cleanup_activity_and_description"],
+      data["c3_cleanup_venue"],
+      data["c_comments_osl"],
+      data["c_comments_root"],
+      data["d1a_club_income_fund"],
+      data["d1a_osl_seed_fund"],
+      data["d1a_donation"],
+      data["d1b_revenue"],
+      data["d1b_donation_or_scholarship"],
+      data["d1b_total_source_of_funds"],
+      data["d11_items_goods_services"],
+      data["d11_price"],
+      data["d11_quantity"],
+      data["d11_amount"],
+      data["d11_total_revenue"],
+      data["d2_items"],
+      data["d2_reason_for_purchase"],
+      data["d2_venue"],
+      data["d2_total_expenditure"],
+      data["d_comments_osl"],
+      data["d_comments_root"],
+      data["e_personal_data"],
+      data["e_comments_osl"],
+      data["e_comments_root"],
+      data["f_name"],
+      data["f_student_id"],
+      data["f_position"],
+      data["f_comments_osl"],
+      data["f_comments_root"],
+      data["g_1_1"],
+      data["g_1_2"],
+      data["g_1_3"],
+      data["g_2_1"],
+      data["g_2_2"],
+      data["g_2_3"],
+      data["g_3_1"],
+      data["g_3_2"],
+      data["g_3_3"],
+      data["g_4_1"],
+      data["g_4_2"],
+      data["g_4_3"],
+      data["g_5_1"],
+      data["g_5_2"],
+      data["g_5_3"],
+      data["g_6_1"],
+      data["g_6_2"],
+      data["g_6_3"],
+      data["g_7_1"],
+      data["g_7_2"],
+      data["g_7_3"],
+      data["g_comments_osl"],
+      data["g_comments_root"]
+    );
+
+    if (updateCheck > 0) {
+      const outstanding_EPF_count = await count_outstanding_EPF();
+      res
+        .status(200)
+        .send(`Updated EPF, Outstanding EPF Count: ${outstanding_EPF_count}`);
+    } else {
+      res.status(400).send("EPF not found or could not update");
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
+});
+
+router.delete("/deleteEPF", async (req, res) => {
+  const data = req.body;
+  try {
+    const deletedEPF = await deleteEPF(data["epf_id"]);
+    if (deletedEPF > 0) {
+      const outstanding_EPF_count = await count_outstanding_EPF();
+      res
+        .status(200)
+        .send(`Deleted EPF, Outstanding EPF Count: ${outstanding_EPF_count}`);
+    } else {
+      res.status(404).send("EPF not found or could not delete");
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
+});
+
+// this End point is essentially does the task of an get request
+// however since the query for specific type of user can be rather complicated
+// we use a post request that enables the use of JSON body data to be passed as part
+// of the request.
+router.post("/getEPFbyAttribute", async (req, res) => {
+  try {
     const data = req.body;
-    await createEPF(
-        data["status"], data["exco_user_id"],
-        data["A_name"], data["A_student_id"], data["A_organisation"], data["A_contact_number"], data["A_email"], data["A_comments_OSL"], data["A_comments_ROOT"],
-        data["B_event_name"], data["B_target_audience"], data["B_event_schedule"], data["B_expected_turnout"], data["B_event_objective"], data["B_comments_OSL"], data["B_comments_ROOT"],
-        data["C1_date"], data["C1_time"], data["C1_activity_and_description"], data["C1_venue"],
-        data["C2_date"], data["C2_time"], data["C2_activity_and_description"], data["C2_venue"],
-        data["C3_date"], data["C3_time"], data["C3_activity_and_description"], data["C3_venue"],
-        data["C3_cleanup_date"], data["C3_cleanup_time"], data["C3_cleanup_activity_and_description"], data["C3_cleanup_venue"], data["C_comments_OSL"], data["C_comments_ROOT"],
-        data["D1A_club_income_fund"], data["D1A_osl_seed_fund"], data["D1A_donation"], data["D1B_revenue"], data["D1B_donation_or_scholarship"], data["D1B_total_source_of_funds"],
-        data["D11_items_goods_services"], data["D11_price"], data["D11_quantity"], data["D11_amount"], data["D11_total_revenue"], 
-        data["D2_items"], data["D2_reason_for_purchase"], data["D2_venue"], data["D2_total_expenditure"], data["D_comments_OSL"], data["D_comments_ROOT"],
-        data["E_personal_data"], data["E_comments_OSL"], data["E_comments_ROOT"],
-        data["F_name"], data["F_student_id"], data["F_position"], data["F_comments_OSL"], data["F_comments_ROOT"],
-        data["G_1_1"], data["G_1_2"], data["G_1_3"],
-        data["G_2_1"], data["G_2_2"], data["G_2_3"],
-        data["G_3_1"], data["G_3_2"], data["G_3_3"],
-        data["G_4_1"], data["G_4_2"], data["G_4_3"],
-        data["G_5_1"], data["G_5_2"], data["G_5_3"],
-        data["G_6_1"], data["G_6_2"], data["G_6_3"],
-        data["G_7_1"], data["G_7_2"], data["G_7_3"], data["G_comments_OSL"], data["G_comments_ROOT"]
-    )   
+    const result = await getEPFbyAttrbute(data);
+    if (result === null) {
+      res.status(404).send("No EPFs found for the given attributes");
+    } else {
+      res.status(200).send(result);
+    }
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("Server Error");
+  }
+});
 
-    const outstanding_EPF_count = await count_outstanding_EPF()
-    res.send(`Created EPF, Outstanding EPF Count: ${outstanding_EPF_count}`)
-})
-
-router.get("/getEPF", async (req,res)=>{
-    const data = req.body
-    const result = await getEPF(data["epf_id"])
-    res.send(result)
-})
-
-router.get("/getEPFs", async (req,res)=>{
-    const data = req.body
-    const result = await getEPFs()
-    res.send(result)
-})
-
-
-
-router.put("/updateEPF", async (req,res)=>{
-    const data = req.body
-    await updateEPF(
-        data["epf_id"], data["status"], data["exco_user_id"],
-        data["A_name"], data["A_student_id"], data["A_organisation"], data["A_contact_number"], data["A_email"], data["A_comments_OSL"], data["A_comments_ROOT"],
-        data["B_event_name"], data["B_target_audience"], data["B_event_schedule"], data["B_expected_turnout"], data["B_event_objective"], data["B_comments_OSL"], data["B_comments_ROOT"],
-        data["C1_date"], data["C1_time"], data["C1_activity_and_description"], data["C1_venue"],
-        data["C2_date"], data["C2_time"], data["C2_activity_and_description"], data["C2_venue"],
-        data["C3_date"], data["C3_time"], data["C3_activity_and_description"], data["C3_venue"],
-        data["C3_cleanup_date"], data["C3_cleanup_time"], data["C3_cleanup_activity_and_description"], data["C3_cleanup_venue"], data["C_comments_OSL"], data["C_comments_ROOT"],
-        data["D1A_club_income_fund"], data["D1A_osl_seed_fund"], data["D1A_donation"], data["D1B_revenue"], data["D1B_donation_or_scholarship"], data["D1B_total_source_of_funds"],
-        data["D11_items_goods_services"], data["D11_price"], data["D11_quantity"], data["D11_amount"], data["D11_total_revenue"], 
-        data["D2_items"], data["D2_reason_for_purchase"], data["D2_venue"], data["D2_total_expenditure"], data["D_comments_OSL"], data["D_comments_ROOT"],
-        data["E_personal_data"], data["E_comments_OSL"], data["E_comments_ROOT"],
-        data["F_name"], data["F_student_id"], data["F_position"], data["F_comments_OSL"], data["F_comments_ROOT"],
-        data["G_1_1"], data["G_1_2"], data["G_1_3"],
-        data["G_2_1"], data["G_2_2"], data["G_2_3"],
-        data["G_3_1"], data["G_3_2"], data["G_3_3"],
-        data["G_4_1"], data["G_4_2"], data["G_4_3"],
-        data["G_5_1"], data["G_5_2"], data["G_5_3"],
-        data["G_6_1"], data["G_6_2"], data["G_6_3"],
-        data["G_7_1"], data["G_7_2"], data["G_7_3"], data["G_comments_OSL"], data["G_comments_ROOT"]
-
-    )
-    const outstanding_EPF_count = await count_outstanding_EPF()
-    res.send(`Updated EPF, Outstanding EPF Count: ${outstanding_EPF_count}`)
-})
-
-router.delete("/deleteEPF", async (req,res)=>{
-    const data = req.body
-    await deleteEPF(data["epf_id"])
-    const outstanding_EPF_count = await count_outstanding_EPF()
-    res.send(`Deleted EPF, Outstanding EPF Count: ${outstanding_EPF_count}`)
-})
-
-export default router
+export default router;
