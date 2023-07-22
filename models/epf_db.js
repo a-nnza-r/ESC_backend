@@ -485,10 +485,9 @@ export async function createEPF(
         throw new Error("Event name missing");
     }
 
-    const query = `INSERT INTO EPFS(${column_names}) VALUES (${columnParams}) RETURNING epf_id`;
+    const query = `INSERT INTO EPFS(${column_names}) VALUES (${columnParams}) RETURNING *`;
     const result = await pool.query(query, values);
     await client.query("COMMIT")
-    //Returns {"epf_id": value}
     return result.rows[0];
   } catch (e) {
     await client.query("ROLLBACK");
@@ -755,10 +754,9 @@ export async function updateEPF(
         throw new Error("Event name missing");
     }
 
-    const query = `UPDATE EPFS SET (${columnNames}) = (${columnParams}) WHERE epf_id=$1 AND is_deleted = false RETURNING epf_id`;
+    const query = `UPDATE EPFS SET (${columnNames}) = (${columnParams}) WHERE epf_id=$1 AND is_deleted = false RETURNING *`;
     let result = await pool.query(query, values);
     await client.query("COMMIT")
-    //Returns {"epf_id": value}
     return result.rows[0]
   } catch (e) {
     await client.query("ROLLBACK");

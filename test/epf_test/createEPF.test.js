@@ -198,12 +198,10 @@ describe("createEPF", () => {
             g_comments_root,
             pool
           )
-
-          const result = await getEPF(createdEPF["epf_id"],pool)
           
           let matches = true;
           for(let key in data) {
-            if(String(data[key])!==String(result[0][key])) {
+            if(String(data[key])!==String(createdEPF[key])) {
               matches = false;
               break;
             }
@@ -1481,7 +1479,10 @@ describe("createEPF", () => {
             g_comments_root_2
           } = data_2;
 
-          await Promise.all([
+          let createdEPF_1;
+          let createdEPF_2;
+
+          const createdEPFs = await Promise.all([
           createEPF(
             status_1,
             exco_user_id_1,
@@ -1657,13 +1658,57 @@ describe("createEPF", () => {
 
         const result_records = await pool.query('SELECT COUNT(*) FROM EPFS;');
         const recordCount = result_records.rows[0].count;
-
         expect(recordCount).toBe("2");
 
+        if(createdEPFs[0]["a_name"]=="user 1") {
+          let matches_1 = true;
+          for(let key in data_1) {
+            const originalKey = key.replace(/_1$/, ""); 
+            if(String(data_1[key])!==String(createdEPFs[0][originalKey])) {
+              matches_1 = false;
+              break;
+            }
+          }
+          expect(createdEPFs[0]).toHaveProperty("epf_id");
+          expect(matches_1).toBeTruthy();
+
+          let matches_2 = true;
+          for(let key in data_2) {
+            const originalKey = key.replace(/_2$/, "");
+            if(String(data_2[key])!==String(createdEPFs[1][originalKey])) {
+              matches_2 = false;
+              break;
+            }
+          }
+          expect(createdEPFs[1]).toHaveProperty("epf_id");
+          expect(matches_2).toBeTruthy();
+          } else {
+
+            let matches_1 = true;
+            for(let key in data_1) {
+              const originalKey = key.replace(/_1$/, ""); 
+              if(String(data_1[key])!==String(createdEPFs[1][originalKey])) {
+                matches_1 = false;
+                break;
+              }
+            }
+            expect(createdEPFs[1]).toHaveProperty("epf_id");
+            expect(matches_1).toBeTruthy();
+
+            let matches_2 = true;
+            for(let key in data_2) {
+              const originalKey = key.replace(/_2$/, ""); 
+              if(String(data_2[key])!==String(createdEPFs[0][originalKey])) {
+                matches_2 = false;
+                break;
+              }
+            }
+            expect(createdEPFs[0]).toHaveProperty("epf_id");
+            expect(matches_2).toBeTruthy();
+
+          }
         })
     
-
-
 
     afterAll(async()=>{
         await pool.end();
