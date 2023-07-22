@@ -8,19 +8,15 @@ import path from "path";
 import dotenv from "dotenv";
 dotenv.config();
 
-const credentials = {
-  host: process.env.HOST,
-  user: process.env.USER,
-  port: process.env.PORT,
-  password: process.env.PASSWORD,
-  database: process.env.DATABASE,
-};
+import {createPool} from "./db_utils.js"
+const defaultPool = createPool();
 
 var download_location = process.env.DOWNLOADPATH;
 
-export async function uploadFiles(epf_id, files) {
-  const pool = new Pool(credentials);
+export async function uploadFiles(epf_id, files, pool = defaultPool) {
+  const client = await pool.connect();
   try {
+    await client.query("BEGIN");
     files.forEach(async (file) => {
       const file_name = file.originalname;
       const file_data = file.buffer;
@@ -29,16 +25,19 @@ export async function uploadFiles(epf_id, files) {
         [epf_id, file_name, file_data]
       );
     });
+    await client.query("COMMIT");
   } catch (e) {
+    await client.query("ROLLBACK");
     throw e;
   } finally {
-    await pool.end();
+    client.release();
   }
 }
 
-export async function getFiles(epf_id) {
-  const pool = new Pool(credentials);
+export async function getFiles(epf_id, pool = defaultPool) {
+  const client = await pool.connect();
   try {
+    await client.query("BEGIN");
     const result = await pool.query(
       `SELECT file_id, file_name, file_data from FILES where epf_id=$1 AND is_deleted = false`,
       [epf_id]
@@ -55,24 +54,29 @@ export async function getFiles(epf_id) {
         }
       });
     });
+    await client.query("COMMIT");
     return file_metadata;
   } catch (e) {
+    await client.query("ROLLBACK");
     throw e;
   } finally {
-    pool.end();
+    client.release();
   }
 }
 
 export async function deleteFiles(file_ids) {
-  const pool = new Pool(credentials);
+  const client = await pool.connect();
   try {
+    await client.query("BEGIN");
     const res = await pool.query(`UPDATE FILES SET is_deleted = true WHERE file_id=ANY($1)`, [
       file_ids,
     ]);
+    await client.query("COMMIT");
     return res.rowCount;
   } catch (e) {
+    await client.query("ROLLBACK");
     throw e;
   } finally {
-    pool.end();
+    client.release();
   }
 }

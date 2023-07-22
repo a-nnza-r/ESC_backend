@@ -3,15 +3,8 @@ const { Pool } = pg;
 import dotenv from "dotenv";
 dotenv.config();
 
-const credentials = {
-  host: process.env.HOST,
-  user: process.env.USER,
-  port: process.env.PORT,
-  password: process.env.PASSWORD,
-  database: process.env.DATABASE,
-};
-
-const defaultPool = new Pool(credentials); // Declare the pool outside of functions
+import {createPool} from "./db_utils.js"
+const defaultPool = createPool();
 
 export async function createEXCO(name, email, pool = defaultPool) {
   const [username, domain] = email.split("@");

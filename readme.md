@@ -7,6 +7,7 @@
 4. npm i multer
 5. npm i dotenv
 6. npm i cors
+7. npm i jest
 
 ## API Routes for EXCOs
 1. Create EXCO (POST Request, requires JSON Body): localhost:3000/users/createEXCO

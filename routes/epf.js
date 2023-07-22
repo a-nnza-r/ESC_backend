@@ -14,7 +14,7 @@ import {
   getEPFs,
   updateEPF,
   deleteEPF,
-  getEPFbyAttrbute,
+  getEPFbyAttribute,
 } from "../models/epf_db.js";
 const router = express.Router();
 
@@ -106,10 +106,10 @@ router.post("/createEPF", async (req, res) => {
       data["g_comments_osl"],
       data["g_comments_root"]
     );
-    const outstanding_EPF_count = await count_outstanding_EPF();
+    await count_outstanding_EPF();
     res
       .status(201)
-      .send(`Created EPF, Outstanding EPF Count: ${outstanding_EPF_count}`);
+      .send(`Created EPF`);
   } catch (err) {
     console.log("Failed to create EPF.", err);
     res.status(500).send("Failed to create EPF.");
@@ -230,7 +230,7 @@ router.put("/updateEPF", async (req, res) => {
       data["g_comments_root"]
     );
 
-    if (updateCheck > 0) {
+    if (updateCheck["epf_id"] == data["epf_id"]) {
       const outstanding_EPF_count = await count_outstanding_EPF();
       res
         .status(200)
@@ -248,7 +248,7 @@ router.delete("/deleteEPF", async (req, res) => {
   const data = req.query;
   try {
     const deletedEPF = await deleteEPF(data.epf_id);
-    if (deletedEPF > 0) {
+    if (deletedEPF["epf_id"] == data.epf_id) {
       const outstanding_EPF_count = await count_outstanding_EPF();
       res
         .status(200)
@@ -269,7 +269,7 @@ router.delete("/deleteEPF", async (req, res) => {
 router.post("/getEPFbyAttribute", async (req, res) => {
   try {
     const data = req.body;
-    const result = await getEPFbyAttrbute(data);
+    const result = await getEPFbyAttribute(data);
     if (result === null) {
       res.status(404).send("No EPFs found for the given attributes");
     } else {
