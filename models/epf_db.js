@@ -6,15 +6,8 @@ import dotenv from "dotenv";
 dotenv.config();
 const { Pool } = pg;
 
-const credentials = {
-  host: process.env.HOST,
-  user: process.env.USER,
-  port: process.env.PORT,
-  password: process.env.PASSWORD,
-  database: process.env.DATABASE,
-};
-
-const defaultPool = new Pool(credentials); // Declare the pool outside of functions
+import {createPool} from "./db_utils.js"
+const defaultPool = createPool();
 
 const epf_db_datatypes_create = {
   "status": "string",
@@ -193,13 +186,25 @@ export async function count_outstanding_EPF(pool=defaultPool) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+
+
+    const exco_user_ids = await pool.query(`SELECT user_id FROM EXCO`);
+    for(let i in exco_user_ids["rows"]) {
+      let result = await pool.query(
+        `SELECT COUNT(*) FROM EPFS WHERE status != $1 AND exco_user_id=$2 AND is_deleted = false`,
+        ["Approved",exco_user_ids["rows"][i]["user_id"]]
+      );
+
+      await pool.query(`UPDATE EXCO SET outstanding_epf=$1 WHERE user_id=$2`, 
+      [result["rows"][0]["count"],exco_user_ids["rows"][i]["user_id"]]
+      );
+    }
+
+
     const result = await pool.query(
       `SELECT COUNT(*) FROM EPFS WHERE status != $1 AND is_deleted = false`,
       ["Approved"]
     );
-    await pool.query(`UPDATE EXCO SET outstanding_epf=$1`, [
-      result["rows"][0]["count"],
-    ]);
   
     await pool.query(`UPDATE OSL SET outstanding_epf=$1`, [
       result["rows"][0]["count"],
@@ -209,8 +214,6 @@ export async function count_outstanding_EPF(pool=defaultPool) {
       result["rows"][0]["count"],
     ]);  
     await client.query("COMMIT")
-    //Returns outstanding EPF count
-    return result["rows"][0]["count"];
   } catch (e) {
     await client.query("ROLLBACK");
     throw e;
