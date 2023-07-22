@@ -1,4 +1,4 @@
-import {createEPF,getEPF} from "../../models/epf_db.js";
+import {createEPF,getEPF,updateEPF} from "../../models/epf_db.js";
 import {createEXCO} from "../../models/exco_db.js";
 import {createPool, deleteFromEXCOs, deleteFromEPFs} from "./epf_test_utils.js";
 
@@ -7,7 +7,7 @@ import fs from "fs";
 
 let pool;
 
-describe("createEPF", () => {
+describe("updateEPF", () => {
     beforeAll(async () => {
         pool = createPool();
         await deleteFromEXCOs(pool);
@@ -20,14 +20,10 @@ describe("createEPF", () => {
 
     beforeEach(async() => {
         await deleteFromEPFs(pool);
-    })
-
-    test("Test ID: 1 - Create new EPF with valid fields", async()=>{
         
         const jsonFilePath = path.join(__dirname, 'createEPF_testjson', 'createEPF_test1.json');
         const jsonData = fs.readFileSync(jsonFilePath, 'utf-8');
         const data = JSON.parse(jsonData);
-        
         const {
             status,
             exco_user_id,
@@ -113,7 +109,7 @@ describe("createEPF", () => {
             g_comments_root
           } = data;
 
-          const createdEPF = await createEPF(
+          await createEPF(
             status,
             exco_user_id,
             a_name,
@@ -199,28 +195,16 @@ describe("createEPF", () => {
             pool
           )
 
-          const result = await getEPF(createdEPF["epf_id"],pool)
-          
-          let matches = true;
-          for(let key in data) {
-            if(String(data[key])!==String(result[0][key])) {
-              matches = false;
-              break;
-            }
-          }
-          
-          expect(createdEPF).toHaveProperty("epf_id");
-          expect(matches).toBeTruthy();
-        })
+    })
 
-
-      test("Test ID: 2 - Non-existent EXCO User ID", async()=>{
-      
-        const jsonFilePath = path.join(__dirname, 'createEPF_testjson', 'createEPF_test2.json');
+    test("Test ID: 1 - Valid input: Update existing EPF with valid fields", async()=>{
+        
+        const jsonFilePath = path.join(__dirname, 'updateEPF_testjson', 'updateEPF_test1.json');
         const jsonData = fs.readFileSync(jsonFilePath, 'utf-8');
         const data = JSON.parse(jsonData);
         
         const {
+            epf_id,
             status,
             exco_user_id,
             a_name,
@@ -305,7 +289,8 @@ describe("createEPF", () => {
             g_comments_root
           } = data;
 
-          await expect(createEPF(
+          const updatedEPF = await updateEPF(
+            epf_id,
             status,
             exco_user_id,
             a_name,
@@ -389,17 +374,395 @@ describe("createEPF", () => {
             g_comments_osl,
             g_comments_root,
             pool
-          )).rejects.toThrow("Non-existent exco user id");
+          )
+
+          const result = await getEPF(updatedEPF["epf_id"],pool)
+          
+          let matches = true;
+          for(let key in data) {
+            if(String(data[key])!==String(result[0][key])) {
+              matches = false;
+              break;
+            }
+          }
+          
+          expect(matches).toBeTruthy();
         })
 
 
-      test("Test ID: 3 - Missing Event Name", async()=>{
+
+
+
+    test("Test ID: 2 - Non-existent EPF ID", async()=>{
     
-        const jsonFilePath = path.join(__dirname, 'createEPF_testjson', 'createEPF_test3.json');
+        const jsonFilePath = path.join(__dirname, 'updateEPF_testjson', 'updateEPF_test2.json');
         const jsonData = fs.readFileSync(jsonFilePath, 'utf-8');
         const data = JSON.parse(jsonData);
         
         const {
+            epf_id,
+            status,
+            exco_user_id,
+            a_name,
+            a_student_id,
+            a_organisation,
+            a_contact_number,
+            a_email,
+            a_comments_osl,
+            a_comments_root,
+            b_event_name,
+            b_target_audience,
+            b_event_schedule,
+            b_expected_turnout,
+            b_event_objective,
+            b_comments_osl,
+            b_comments_root,
+            c1_date,
+            c1_time,
+            c1_activity_and_description,
+            c1_venue,
+            c2_date,
+            c2_time,
+            c2_activity_and_description,
+            c2_venue,
+            c3_date,
+            c3_time,
+            c3_activity_and_description,
+            c3_venue,
+            c3_cleanup_date,
+            c3_cleanup_time,
+            c3_cleanup_activity_and_description,
+            c3_cleanup_venue,
+            c_comments_osl,
+            c_comments_root,
+            d1a_club_income_fund,
+            d1a_osl_seed_fund,
+            d1a_donation,
+            d1b_revenue,
+            d1b_donation_or_scholarship,
+            d1b_total_source_of_funds,
+            d11_items_goods_services,
+            d11_price,
+            d11_quantity,
+            d11_amount,
+            d11_total_revenue,
+            d2_items,
+            d2_reason_for_purchase,
+            d2_venue,
+            d2_total_expenditure,
+            d_comments_osl,
+            d_comments_root,
+            e_personal_data,
+            e_comments_osl,
+            e_comments_root,
+            f_name,
+            f_student_id,
+            f_position,
+            f_comments_osl,
+            f_comments_root,
+            g_1_1,
+            g_1_2,
+            g_1_3,
+            g_2_1,
+            g_2_2,
+            g_2_3,
+            g_3_1,
+            g_3_2,
+            g_3_3,
+            g_4_1,
+            g_4_2,
+            g_4_3,
+            g_5_1,
+            g_5_2,
+            g_5_3,
+            g_6_1,
+            g_6_2,
+            g_6_3,
+            g_7_1,
+            g_7_2,
+            g_7_3,
+            g_comments_osl,
+            g_comments_root
+            } = data;
+
+            await expect(updateEPF(
+            epf_id,
+            status,
+            exco_user_id,
+            a_name,
+            a_student_id,
+            a_organisation,
+            a_contact_number,
+            a_email,
+            a_comments_osl,
+            a_comments_root,
+            b_event_name,
+            b_target_audience,
+            b_event_schedule,
+            b_expected_turnout,
+            b_event_objective,
+            b_comments_osl,
+            b_comments_root,
+            c1_date,
+            c1_time,
+            c1_activity_and_description,
+            c1_venue,
+            c2_date,
+            c2_time,
+            c2_activity_and_description,
+            c2_venue,
+            c3_date,
+            c3_time,
+            c3_activity_and_description,
+            c3_venue,
+            c3_cleanup_date,
+            c3_cleanup_time,
+            c3_cleanup_activity_and_description,
+            c3_cleanup_venue,
+            c_comments_osl,
+            c_comments_root,
+            d1a_club_income_fund,
+            d1a_osl_seed_fund,
+            d1a_donation,
+            d1b_revenue,
+            d1b_donation_or_scholarship,
+            d1b_total_source_of_funds,
+            d11_items_goods_services,
+            d11_price,
+            d11_quantity,
+            d11_amount,
+            d11_total_revenue,
+            d2_items,
+            d2_reason_for_purchase,
+            d2_venue,
+            d2_total_expenditure,
+            d_comments_osl,
+            d_comments_root,
+            e_personal_data,
+            e_comments_osl,
+            e_comments_root,
+            f_name,
+            f_student_id,
+            f_position,
+            f_comments_osl,
+            f_comments_root,
+            g_1_1,
+            g_1_2,
+            g_1_3,
+            g_2_1,
+            g_2_2,
+            g_2_3,
+            g_3_1,
+            g_3_2,
+            g_3_3,
+            g_4_1,
+            g_4_2,
+            g_4_3,
+            g_5_1,
+            g_5_2,
+            g_5_3,
+            g_6_1,
+            g_6_2,
+            g_6_3,
+            g_7_1,
+            g_7_2,
+            g_7_3,
+            g_comments_osl,
+            g_comments_root,
+            pool
+            )).rejects.toThrow("Non-existent epf");
+        })
+
+
+    test("Test ID: 3 - Non-existent EXCO User ID", async()=>{
+
+        const jsonFilePath = path.join(__dirname, 'updateEPF_testjson', 'updateEPF_test3.json');
+        const jsonData = fs.readFileSync(jsonFilePath, 'utf-8');
+        const data = JSON.parse(jsonData);
+        
+        const {
+            epf_id,
+            status,
+            exco_user_id,
+            a_name,
+            a_student_id,
+            a_organisation,
+            a_contact_number,
+            a_email,
+            a_comments_osl,
+            a_comments_root,
+            b_event_name,
+            b_target_audience,
+            b_event_schedule,
+            b_expected_turnout,
+            b_event_objective,
+            b_comments_osl,
+            b_comments_root,
+            c1_date,
+            c1_time,
+            c1_activity_and_description,
+            c1_venue,
+            c2_date,
+            c2_time,
+            c2_activity_and_description,
+            c2_venue,
+            c3_date,
+            c3_time,
+            c3_activity_and_description,
+            c3_venue,
+            c3_cleanup_date,
+            c3_cleanup_time,
+            c3_cleanup_activity_and_description,
+            c3_cleanup_venue,
+            c_comments_osl,
+            c_comments_root,
+            d1a_club_income_fund,
+            d1a_osl_seed_fund,
+            d1a_donation,
+            d1b_revenue,
+            d1b_donation_or_scholarship,
+            d1b_total_source_of_funds,
+            d11_items_goods_services,
+            d11_price,
+            d11_quantity,
+            d11_amount,
+            d11_total_revenue,
+            d2_items,
+            d2_reason_for_purchase,
+            d2_venue,
+            d2_total_expenditure,
+            d_comments_osl,
+            d_comments_root,
+            e_personal_data,
+            e_comments_osl,
+            e_comments_root,
+            f_name,
+            f_student_id,
+            f_position,
+            f_comments_osl,
+            f_comments_root,
+            g_1_1,
+            g_1_2,
+            g_1_3,
+            g_2_1,
+            g_2_2,
+            g_2_3,
+            g_3_1,
+            g_3_2,
+            g_3_3,
+            g_4_1,
+            g_4_2,
+            g_4_3,
+            g_5_1,
+            g_5_2,
+            g_5_3,
+            g_6_1,
+            g_6_2,
+            g_6_3,
+            g_7_1,
+            g_7_2,
+            g_7_3,
+            g_comments_osl,
+            g_comments_root
+            } = data;
+
+            await expect(updateEPF(
+            epf_id,
+            status,
+            exco_user_id,
+            a_name,
+            a_student_id,
+            a_organisation,
+            a_contact_number,
+            a_email,
+            a_comments_osl,
+            a_comments_root,
+            b_event_name,
+            b_target_audience,
+            b_event_schedule,
+            b_expected_turnout,
+            b_event_objective,
+            b_comments_osl,
+            b_comments_root,
+            c1_date,
+            c1_time,
+            c1_activity_and_description,
+            c1_venue,
+            c2_date,
+            c2_time,
+            c2_activity_and_description,
+            c2_venue,
+            c3_date,
+            c3_time,
+            c3_activity_and_description,
+            c3_venue,
+            c3_cleanup_date,
+            c3_cleanup_time,
+            c3_cleanup_activity_and_description,
+            c3_cleanup_venue,
+            c_comments_osl,
+            c_comments_root,
+            d1a_club_income_fund,
+            d1a_osl_seed_fund,
+            d1a_donation,
+            d1b_revenue,
+            d1b_donation_or_scholarship,
+            d1b_total_source_of_funds,
+            d11_items_goods_services,
+            d11_price,
+            d11_quantity,
+            d11_amount,
+            d11_total_revenue,
+            d2_items,
+            d2_reason_for_purchase,
+            d2_venue,
+            d2_total_expenditure,
+            d_comments_osl,
+            d_comments_root,
+            e_personal_data,
+            e_comments_osl,
+            e_comments_root,
+            f_name,
+            f_student_id,
+            f_position,
+            f_comments_osl,
+            f_comments_root,
+            g_1_1,
+            g_1_2,
+            g_1_3,
+            g_2_1,
+            g_2_2,
+            g_2_3,
+            g_3_1,
+            g_3_2,
+            g_3_3,
+            g_4_1,
+            g_4_2,
+            g_4_3,
+            g_5_1,
+            g_5_2,
+            g_5_3,
+            g_6_1,
+            g_6_2,
+            g_6_3,
+            g_7_1,
+            g_7_2,
+            g_7_3,
+            g_comments_osl,
+            g_comments_root,
+            pool
+            )).rejects.toThrow("Non-existent exco user id");
+        })
+
+
+      test("Test ID: 4 - Missing Event Name", async()=>{
+    
+        const jsonFilePath = path.join(__dirname, 'updateEPF_testjson', 'updateEPF_test4.json');
+        const jsonData = fs.readFileSync(jsonFilePath, 'utf-8');
+        const data = JSON.parse(jsonData);
+        
+        const {
+            epf_id,
             status,
             exco_user_id,
             a_name,
@@ -484,7 +847,8 @@ describe("createEPF", () => {
             g_comments_root
           } = data;
 
-          await expect(createEPF(
+          await expect(updateEPF(
+            epf_id,
             status,
             exco_user_id,
             a_name,
@@ -572,13 +936,14 @@ describe("createEPF", () => {
         })
 
 
-      test("Test ID: 4 - Invalid INT datatype", async()=>{
+      test("Test ID: 5 - Invalid INT datatype", async()=>{
   
-        const jsonFilePath = path.join(__dirname, 'createEPF_testjson', 'createEPF_test4.json');
+        const jsonFilePath = path.join(__dirname, 'updateEPF_testjson', 'updateEPF_test5.json');
         const jsonData = fs.readFileSync(jsonFilePath, 'utf-8');
         const data = JSON.parse(jsonData);
         
         const {
+            epf_id,
             status,
             exco_user_id,
             a_name,
@@ -663,7 +1028,8 @@ describe("createEPF", () => {
             g_comments_root
           } = data;
 
-          await expect(createEPF(
+          await expect(updateEPF(
+            epf_id,
             status,
             exco_user_id,
             a_name,
@@ -754,13 +1120,14 @@ describe("createEPF", () => {
 
 
 
-      test("Test ID: 5 - Invalid Object datatype", async()=>{
+      test("Test ID: 6 - Invalid Object datatype", async()=>{
 
-        const jsonFilePath = path.join(__dirname, 'createEPF_testjson', 'createEPF_test5.json');
+        const jsonFilePath = path.join(__dirname, 'updateEPF_testjson', 'updateEPF_test6.json');
         const jsonData = fs.readFileSync(jsonFilePath, 'utf-8');
         const data = JSON.parse(jsonData);
         
         const {
+            epf_id,
             status,
             exco_user_id,
             a_name,
@@ -845,7 +1212,8 @@ describe("createEPF", () => {
             g_comments_root
           } = data;
 
-          await expect(createEPF(
+          await expect(updateEPF(
+            epf_id,
             status,
             exco_user_id,
             a_name,
@@ -936,13 +1304,14 @@ describe("createEPF", () => {
 
 
 
-      test("Test ID: 6 - Invalid Decimal datatype", async()=>{
+      test("Test ID: 7 - Invalid Decimal datatype", async()=>{
 
-        const jsonFilePath = path.join(__dirname, 'createEPF_testjson', 'createEPF_test6.json');
+        const jsonFilePath = path.join(__dirname, 'updateEPF_testjson', 'updateEPF_test7.json');
         const jsonData = fs.readFileSync(jsonFilePath, 'utf-8');
         const data = JSON.parse(jsonData);
         
         const {
+            epf_id,
             status,
             exco_user_id,
             a_name,
@@ -1027,7 +1396,8 @@ describe("createEPF", () => {
             g_comments_root
           } = data;
 
-          await expect(createEPF(
+          await expect(updateEPF(
+            epf_id,
             status,
             exco_user_id,
             a_name,
@@ -1118,13 +1488,14 @@ describe("createEPF", () => {
 
 
 
-      test("Test ID: 7 - Invalid String datatype", async()=>{
+      test("Test ID: 8 - Invalid String datatype", async()=>{
 
-        const jsonFilePath = path.join(__dirname, 'createEPF_testjson', 'createEPF_test7.json');
+        const jsonFilePath = path.join(__dirname, 'updateEPF_testjson', 'updateEPF_test8.json');
         const jsonData = fs.readFileSync(jsonFilePath, 'utf-8');
         const data = JSON.parse(jsonData);
         
         const {
+            epf_id,
             status,
             exco_user_id,
             a_name,
@@ -1209,7 +1580,8 @@ describe("createEPF", () => {
             g_comments_root
           } = data;
 
-          await expect(createEPF(
+          await expect(updateEPF(
+            epf_id,
             status,
             exco_user_id,
             a_name,
@@ -1300,17 +1672,194 @@ describe("createEPF", () => {
 
 
 
-      test("Test ID: 8 - Create multiple EPFs with valid fields concurrently", async()=>{
+      test("Test ID: 9 - Update multiple EPFs with valid fields concurrently", async()=>{
 
-        const jsonFilePath_1 = path.join(__dirname, 'createEPF_testjson', 'createEPF_test8_1.json');
+        
+        
+        const jsonFilePath = path.join(__dirname, 'createEPF_testjson', 'createEPF_test1.json');
+        const jsonData = fs.readFileSync(jsonFilePath, 'utf-8');
+        const data = JSON.parse(jsonData);
+        const {
+            status,
+            exco_user_id,
+            a_name,
+            a_student_id,
+            a_organisation,
+            a_contact_number,
+            a_email,
+            a_comments_osl,
+            a_comments_root,
+            b_event_name,
+            b_target_audience,
+            b_event_schedule,
+            b_expected_turnout,
+            b_event_objective,
+            b_comments_osl,
+            b_comments_root,
+            c1_date,
+            c1_time,
+            c1_activity_and_description,
+            c1_venue,
+            c2_date,
+            c2_time,
+            c2_activity_and_description,
+            c2_venue,
+            c3_date,
+            c3_time,
+            c3_activity_and_description,
+            c3_venue,
+            c3_cleanup_date,
+            c3_cleanup_time,
+            c3_cleanup_activity_and_description,
+            c3_cleanup_venue,
+            c_comments_osl,
+            c_comments_root,
+            d1a_club_income_fund,
+            d1a_osl_seed_fund,
+            d1a_donation,
+            d1b_revenue,
+            d1b_donation_or_scholarship,
+            d1b_total_source_of_funds,
+            d11_items_goods_services,
+            d11_price,
+            d11_quantity,
+            d11_amount,
+            d11_total_revenue,
+            d2_items,
+            d2_reason_for_purchase,
+            d2_venue,
+            d2_total_expenditure,
+            d_comments_osl,
+            d_comments_root,
+            e_personal_data,
+            e_comments_osl,
+            e_comments_root,
+            f_name,
+            f_student_id,
+            f_position,
+            f_comments_osl,
+            f_comments_root,
+            g_1_1,
+            g_1_2,
+            g_1_3,
+            g_2_1,
+            g_2_2,
+            g_2_3,
+            g_3_1,
+            g_3_2,
+            g_3_3,
+            g_4_1,
+            g_4_2,
+            g_4_3,
+            g_5_1,
+            g_5_2,
+            g_5_3,
+            g_6_1,
+            g_6_2,
+            g_6_3,
+            g_7_1,
+            g_7_2,
+            g_7_3,
+            g_comments_osl,
+            g_comments_root
+          } = data;
+
+          await createEPF(
+            status,
+            exco_user_id,
+            a_name,
+            a_student_id,
+            a_organisation,
+            a_contact_number,
+            a_email,
+            a_comments_osl,
+            a_comments_root,
+            b_event_name,
+            b_target_audience,
+            b_event_schedule,
+            b_expected_turnout,
+            b_event_objective,
+            b_comments_osl,
+            b_comments_root,
+            c1_date,
+            c1_time,
+            c1_activity_and_description,
+            c1_venue,
+            c2_date,
+            c2_time,
+            c2_activity_and_description,
+            c2_venue,
+            c3_date,
+            c3_time,
+            c3_activity_and_description,
+            c3_venue,
+            c3_cleanup_date,
+            c3_cleanup_time,
+            c3_cleanup_activity_and_description,
+            c3_cleanup_venue,
+            c_comments_osl,
+            c_comments_root,
+            d1a_club_income_fund,
+            d1a_osl_seed_fund,
+            d1a_donation,
+            d1b_revenue,
+            d1b_donation_or_scholarship,
+            d1b_total_source_of_funds,
+            d11_items_goods_services,
+            d11_price,
+            d11_quantity,
+            d11_amount,
+            d11_total_revenue,
+            d2_items,
+            d2_reason_for_purchase,
+            d2_venue,
+            d2_total_expenditure,
+            d_comments_osl,
+            d_comments_root,
+            e_personal_data,
+            e_comments_osl,
+            e_comments_root,
+            f_name,
+            f_student_id,
+            f_position,
+            f_comments_osl,
+            f_comments_root,
+            g_1_1,
+            g_1_2,
+            g_1_3,
+            g_2_1,
+            g_2_2,
+            g_2_3,
+            g_3_1,
+            g_3_2,
+            g_3_3,
+            g_4_1,
+            g_4_2,
+            g_4_3,
+            g_5_1,
+            g_5_2,
+            g_5_3,
+            g_6_1,
+            g_6_2,
+            g_6_3,
+            g_7_1,
+            g_7_2,
+            g_7_3,
+            g_comments_osl,
+            g_comments_root,
+            pool
+          )
+
+        const jsonFilePath_1 = path.join(__dirname, 'updateEPF_testjson', 'updateEPF_test9_1.json');
         const jsonData_1 = fs.readFileSync(jsonFilePath_1, 'utf-8');
         const data_1 = JSON.parse(jsonData_1);
 
-        const jsonFilePath_2 = path.join(__dirname, 'createEPF_testjson', 'createEPF_test8_2.json');
+        const jsonFilePath_2 = path.join(__dirname, 'updateEPF_testjson', 'updateEPF_test9_2.json');
         const jsonData_2 = fs.readFileSync(jsonFilePath_2, 'utf-8');
         const data_2 = JSON.parse(jsonData_2);
         
         const {
+          epf_id_1,
           status_1,
           exco_user_id_1,
           a_name_1,
@@ -1397,6 +1946,7 @@ describe("createEPF", () => {
 
 
           const {
+            epf_id_2,
             status_2,
             exco_user_id_2,
             a_name_2,
@@ -1482,7 +2032,8 @@ describe("createEPF", () => {
           } = data_2;
 
           await Promise.all([
-          createEPF(
+          updateEPF(
+            epf_id_1,
             status_1,
             exco_user_id_1,
             a_name_1,
@@ -1568,7 +2119,8 @@ describe("createEPF", () => {
             pool
           ),
 
-          createEPF(
+          updateEPF(
+            epf_id_2,
             status_2,
             exco_user_id_2,
             a_name_2,
@@ -1660,6 +2212,33 @@ describe("createEPF", () => {
 
         expect(recordCount).toBe("2");
 
+
+
+
+        const result_1 = await getEPF(epf_id_1,pool)
+        let matches_1 = true;
+        for(let key in data_1) {
+          const originalKey = key.replace(/_1$/, ""); // Remove the "_1" suffix from the key
+          if(String(data_1[key])!==String(result_1[0][originalKey])) {
+            matches_1 = false;
+            break;
+          }
+        }
+        expect(matches_1).toBeTruthy();
+
+
+        const result_2 = await getEPF(epf_id_2,pool)
+        let matches_2 = true;
+        for(let key in data_2) {
+          const originalKey = key.replace(/_2$/, ""); // Remove the "_2" suffix from the key
+          if(String(data_2[key])!==String(result_2[0][originalKey])) {
+            matches_2 = false;
+            break;
+          }
+        }
+        expect(matches_2).toBeTruthy();
+
+        
         })
     
 

@@ -26,6 +26,24 @@ async function deleteFromEXCOs(pool) {
   }
 }
 
+async function deleteFromOSLs(pool) {
+  try {
+    await pool.query("TRUNCATE TABLE OSL RESTART IDENTITY CASCADE;");
+  } catch (e) {
+    console.error("Error on OSL truncate:", e.stack);
+    throw e;
+  }
+}
+
+async function deleteFromROOTs(pool) {
+  try {
+    await pool.query("TRUNCATE TABLE ROOT RESTART IDENTITY CASCADE;");
+  } catch (e) {
+    console.error("Error on ROOT truncate:", e.stack);
+    throw e;
+  }
+}
+
 async function deleteFromEPFs(pool) {
   try {
     await pool.query("TRUNCATE TABLE epfs RESTART IDENTITY CASCADE;");
@@ -38,5 +56,7 @@ async function deleteFromEPFs(pool) {
 module.exports = {
   createPool,
   deleteFromEXCOs,
+  deleteFromOSLs,
+  deleteFromROOTs,
   deleteFromEPFs
 };
