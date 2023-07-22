@@ -424,40 +424,83 @@ describe("getEPFs", () => {
         const data_2 = JSON.parse(jsonData_2);
 
         let matches_1_1 = true;
-        for(let key in data_1) {
-            const originalKey = key.replace(/_1$/, ""); // Remove the "_1" suffix from the key
-            if(String(data_1[key])!==String(result_1[0][originalKey])) {
-                matches_1 = false;
-                break;
-            }
-        }
-
-        let matches_2_1 = true;
-        for(let key in data_1) {
-            const originalKey = key.replace(/_1$/, ""); // Remove the "_1" suffix from the key
-            if(String(data_1[key])!==String(result_2[0][originalKey])) {
-                matches_1 = false;
-                break;
-            }
-        }
-
         let matches_1_2 = true;
-        for(let key in data_2) {
-            const originalKey = key.replace(/_2$/, ""); // Remove the "_2" suffix from the key
-            if(String(data_2[key])!==String(result_1[1][originalKey])) {
-                matches_2 = false;
-                break;
+        let matches_2_1 = true;
+        let matches_2_2 = true;
+
+
+        if(result_1[0]["a_name"]=="user 1") {
+            for(let key in data_1) {
+                const originalKey = key.replace(/_1$/, ""); // Remove the "_1" suffix from the key
+                if(String(data_1[key])!==String(result_1[0][originalKey])) {
+                    matches_1_1 = false;
+                    break;
+                }
+            }
+
+            for(let key in data_2) {
+                const originalKey = key.replace(/_2$/, ""); // Remove the "_2" suffix from the key
+                if(String(data_2[key])!==String(result_1[1][originalKey])) {
+                    matches_1_2 = false;
+                    break;
+                }
+            }
+        } else {
+            for(let key in data_1) {
+                const originalKey = key.replace(/_1$/, ""); // Remove the "_1" suffix from the key
+                if(String(data_1[key])!==String(result_1[1][originalKey])) {
+                    matches_1_1 = false;
+                    break;
+                }
+            }
+
+            for(let key in data_2) {
+                const originalKey = key.replace(/_2$/, ""); // Remove the "_2" suffix from the key
+                if(String(data_2[key])!==String(result_1[0][originalKey])) {
+                    matches_1_2 = false;
+                    break;
+                }
+            }
+
+        }
+
+        if(result_2[0]["a_name"]=="user 1") {
+            for(let key in data_1) {
+                const originalKey = key.replace(/_1$/, ""); // Remove the "_1" suffix from the key
+                if(String(data_1[key])!==String(result_2[0][originalKey])) {
+                    matches_2_1 = false;
+                    break;
+                }
+            }
+
+            for(let key in data_2) {
+                const originalKey = key.replace(/_2$/, ""); // Remove the "_2" suffix from the key
+                if(String(data_2[key])!==String(result_2[1][originalKey])) {
+                    matches_2_2 = false;
+                    break;
+                }
+            }
+        } else {
+            for(let key in data_1) {
+                const originalKey = key.replace(/_1$/, ""); // Remove the "_1" suffix from the key
+                if(String(data_1[key])!==String(result_2[1][originalKey])) {
+                    matches_2_1 = false;
+                    break;
+                }
+            }
+
+            for(let key in data_2) {
+                const originalKey = key.replace(/_2$/, ""); // Remove the "_2" suffix from the key
+                if(String(data_2[key])!==String(result_2[0][originalKey])) {
+                    matches_2_2 = false;
+                    break;
+                }
             }
         }
 
-        let matches_2_2 = true;
-        for(let key in data_2) {
-            const originalKey = key.replace(/_2$/, ""); // Remove the "_2" suffix from the key
-            if(String(data_2[key])!==String(result_2[1][originalKey])) {
-                matches_2 = false;
-                break;
-            }
-        }
+        
+
+        
 
         expect(matches_1_1).toBeTruthy();
         expect(matches_1_2).toBeTruthy();

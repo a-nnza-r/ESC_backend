@@ -106,10 +106,10 @@ router.post("/createEPF", async (req, res) => {
       data["g_comments_osl"],
       data["g_comments_root"]
     );
-    const outstanding_EPF_count = await count_outstanding_EPF();
+    await count_outstanding_EPF();
     res
       .status(201)
-      .send(`Created EPF, Outstanding EPF Count: ${outstanding_EPF_count}`);
+      .send(`Created EPF`);
   } catch (err) {
     console.log("Failed to create EPF.", err);
     res.status(500).send("Failed to create EPF.");
