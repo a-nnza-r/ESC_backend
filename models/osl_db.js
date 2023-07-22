@@ -1,12 +1,8 @@
 /*
 Logic for Users DB
 */
-import pg from "pg";
-const { Pool } = pg;
-import dotenv from "dotenv";
-dotenv.config();
 
-import {createPool} from "./db_utils.js"
+import { createPool } from "./db_utils.js";
 const defaultPool = createPool();
 
 export async function createOSL(name, email, pool = defaultPool) {
