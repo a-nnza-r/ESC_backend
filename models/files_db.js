@@ -1,14 +1,10 @@
 /*
 Logic for Users DB
 */
-import pg from "pg";
-const { Pool } = pg;
 import fs from "fs";
 import path from "path";
-import dotenv from "dotenv";
-dotenv.config();
 
-import {createPool} from "./db_utils.js"
+import { createPool } from "./db_utils.js";
 const defaultPool = createPool();
 
 var download_location = process.env.DOWNLOADPATH;
@@ -68,9 +64,10 @@ export async function deleteFiles(file_ids) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    const res = await pool.query(`UPDATE FILES SET is_deleted = true WHERE file_id=ANY($1)`, [
-      file_ids,
-    ]);
+    const res = await pool.query(
+      `UPDATE FILES SET is_deleted = true WHERE file_id=ANY($1)`,
+      [file_ids]
+    );
     await client.query("COMMIT");
     return res.rowCount;
   } catch (e) {
