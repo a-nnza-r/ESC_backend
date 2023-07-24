@@ -119,7 +119,7 @@ router.post("/createEPF", async (req, res) => {
 router.get("/getEPF", async (req, res) => {
   try {
     const data = req.query;
-    const result = await getEPF(data.epf_id);
+    const result = await getEPF(parseInt(data.epf_id));
     if (result === null) {
       res.status(404).send("No EPFs found for the given EPF id");
     } else {
@@ -231,10 +231,10 @@ router.put("/updateEPF", async (req, res) => {
     );
 
     if (updateCheck["epf_id"] == data["epf_id"]) {
-      const outstanding_EPF_count = await count_outstanding_EPF();
+      await count_outstanding_EPF();
       res
         .status(200)
-        .send(`Updated EPF, Outstanding EPF Count: ${outstanding_EPF_count}`);
+        .send(`Updated EPF`);
     } else {
       res.status(400).send("EPF not found or could not update");
     }
@@ -247,12 +247,12 @@ router.put("/updateEPF", async (req, res) => {
 router.delete("/deleteEPF", async (req, res) => {
   const data = req.query;
   try {
-    const deletedEPF = await deleteEPF(data.epf_id);
+    const deletedEPF = await deleteEPF(parseInt(data.epf_id));
     if (deletedEPF["epf_id"] == data.epf_id) {
-      const outstanding_EPF_count = await count_outstanding_EPF();
+      await count_outstanding_EPF();
       res
         .status(200)
-        .send(`Deleted EPF, Outstanding EPF Count: ${outstanding_EPF_count}`);
+        .send(`Deleted EPF`);
     } else {
       res.status(404).send("EPF not found or could not delete");
     }

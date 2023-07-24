@@ -7,7 +7,7 @@ const defaultPool = createPool();
 
 const epf_db_datatypes_create = {
   status: "string",
-  exco_user_id: "number",
+  exco_user_id: "string",
   a_name: "string",
   a_student_id: "number",
   a_organisation: "string",
@@ -93,7 +93,7 @@ const epf_db_datatypes_create = {
 const epf_db_datatypes_update = {
   epf_id: "number",
   status: "string",
-  exco_user_id: "number",
+  exco_user_id: "string",
   a_name: "string",
   a_student_id: "number",
   a_organisation: "string",
@@ -180,15 +180,14 @@ export async function count_outstanding_EPF(pool = defaultPool) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-
-    const exco_user_ids = await pool.query(`SELECT user_id FROM EXCO`);
+    const exco_user_ids = await pool.query(`SELECT user_id FROM users WHERE user_type=$1`, ["EXCO"]);
     for (let i in exco_user_ids["rows"]) {
       let result = await pool.query(
         `SELECT COUNT(*) FROM EPFS WHERE status != $1 AND exco_user_id=$2 AND is_deleted = false`,
         ["Approved", exco_user_ids["rows"][i]["user_id"]]
       );
 
-      await pool.query(`UPDATE EXCO SET outstanding_epf=$1 WHERE user_id=$2`, [
+      await pool.query(`UPDATE users SET outstanding_epf=$1 WHERE user_id=$2`, [
         result["rows"][0]["count"],
         exco_user_ids["rows"][i]["user_id"],
       ]);
@@ -199,12 +198,8 @@ export async function count_outstanding_EPF(pool = defaultPool) {
       ["Approved"]
     );
 
-    await pool.query(`UPDATE OSL SET outstanding_epf=$1`, [
-      result["rows"][0]["count"],
-    ]);
-
-    await pool.query(`UPDATE ROOT SET outstanding_epf=$1`, [
-      result["rows"][0]["count"],
+    await pool.query(`UPDATE users SET outstanding_epf=$1 WHERE user_type != $2`, [
+      result["rows"][0]["count"], "EXCO"
     ]);
     await client.query("COMMIT");
   } catch (e) {
@@ -470,8 +465,8 @@ export async function createEPF(
 
     //Check for valid exco_user_id
     const valid_exco_user_id = await pool.query(
-      `SELECT COUNT(*) FROM EXCO WHERE user_id=$1`,
-      [exco_user_id]
+      `SELECT COUNT(*) FROM users WHERE user_id=$1 AND user_type=$2`,
+      [exco_user_id,"EXCO"]
     );
     if (valid_exco_user_id.rows[0]["count"] == 0) {
       throw new Error("Non-existent exco user id");
@@ -481,6 +476,7 @@ export async function createEPF(
     if (B_event_name.trim().length == 0) {
       throw new Error("Event name missing");
     }
+
 
     const query = `INSERT INTO EPFS(${column_names}) VALUES (${columnParams}) RETURNING *`;
     const result = await pool.query(query, values);
@@ -506,7 +502,7 @@ export async function getEPF(epf_id, pool = defaultPool) {
 
     //Check for valid epf_id
     const valid_epf_id = await pool.query(
-      `SELECT COUNT(*) FROM EPFS WHERE epf_id=$1 AND is_deleted = false`,
+      `SELECT COUNT(*) FROM EPFS WHERE epf_id = $1 AND is_deleted = false`,
       [epf_id]
     );
     if (valid_epf_id.rows[0]["count"] == 0) {
@@ -514,7 +510,7 @@ export async function getEPF(epf_id, pool = defaultPool) {
     }
 
     const result = await pool.query(
-      "SELECT * FROM EPFS WHERE epf_id=$1 AND is_deleted = false",
+      "SELECT * FROM EPFS WHERE epf_id = $1 AND is_deleted = false",
       [epf_id]
     );
     await client.query("COMMIT");
@@ -750,8 +746,8 @@ export async function updateEPF(
 
     //Check for valid exco_user_id
     const valid_exco_user_id = await pool.query(
-      `SELECT COUNT(*) FROM EXCO WHERE user_id=$1`,
-      [exco_user_id]
+      `SELECT COUNT(*) FROM users WHERE user_id=$1 AND user_type=$2`,
+      [exco_user_id,"EXCO"]
     );
     if (valid_exco_user_id.rows[0]["count"] == 0) {
       throw new Error("Non-existent exco user id");
