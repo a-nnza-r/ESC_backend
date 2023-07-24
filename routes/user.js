@@ -8,21 +8,21 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 import {
-  createEXCO,
-  getEXCOs,
-  getEXCO,
+  createUser,
+  getUser,
+  getUsers,
   getEXCOEPFs,
-  updateEXCO,
-  deleteEXCO,
-  getEXCOsByAttribute,
-} from "../models/exco_db.js";
+  updateUser,
+  deleteUser,
+  getUsersByAttribute,
+} from "../models/user_db.js";
 const router = express.Router();
 
-router.post("/createEXCO", async (req, res) => {
+router.post("/createUser", async (req, res) => {
   const data = req.body;
   try {
-    const newUser = await createEXCO(data["name"], data["email"]); // newUser will contain the JSON object returned by createEXCO()
-    res.status(201).send("Created EXCO user");
+    const newUser = await createUser(data["user_id"],data["name"], data["email"], data["type"]); // newUser will contain the JSON object returned by createEXCO()
+    res.status(201).send(`Created User`);
   } catch (err) {
     if (err.message === "Duplicate entry") {
       res.status(400).send("Duplicate entry");
@@ -33,28 +33,18 @@ router.post("/createEXCO", async (req, res) => {
   }
 });
 
-router.get("/getEXCOs", async (req, res) => {
-  try {
-    const result = await getEXCOs();
-    res.status(200).send(result);
-  } catch (err) {
-    console.error("Server error: ", err);
-    res.status(500).send(`Server error: ${err}`);
-  }
-});
-
-router.get("/getEXCO", async (req, res) => {
+router.get("/getUser", async (req, res) => {
   const data = req.query;
   try {
-    const result = await getEXCO(data.user_id);
+    const result = await getUser(data.user_id);
     if (result.length === 0) {
-      res.status(404).send("EXCO not found");
+      res.status(404).send("User not found");
     } else {
       res.status(200).send(result);
     }
   } catch (err) {
-    if (err.message === "EXCO not found") {
-      res.status(404).send("EXCO not found");
+    if (err.message === "User not found") {
+      res.status(404).send("User not found");
     } else {
       console.error(err);
       res.status(500).send("Server Error");
@@ -62,10 +52,21 @@ router.get("/getEXCO", async (req, res) => {
   }
 });
 
+router.get("/getUsers", async (req, res) => {
+  try {
+    const result = await getUsers();
+    res.status(200).send(result);
+  } catch (err) {
+    console.error("Server error: ", err);
+    res.status(500).send(`Server error: ${err}`);
+  }
+});
+
+
 router.get("/getEXCOEPFs", async (req, res) => {
   try {
     const data = req.query;
-    const result = await getEXCOEPFs(data.exco_user_id);
+    const result = await getEXCOEPFs(data.user_id);
     if (result.length === 0) {
       res.status(404).send("No EPFs found for the given EXCO user");
     } else {
@@ -77,27 +78,27 @@ router.get("/getEXCOEPFs", async (req, res) => {
   }
 });
 
-router.put("/updateEXCO", async (req, res) => {
+router.put("/updateUser", async (req, res) => {
   try {
     const data = req.body;
-    await updateEXCO(data["user_id"], data["name"], data["email"]);
-    res.status(200).send("Updated EXCO user");
+    await updateUser(data["user_id"], data["name"], data["email"], data["type"]);
+    res.status(200).send(`Updated User`);
   } catch (err) {
     console.error(err);
     res.status(500).send(`Server Error : ${err.message}`);
   }
 });
 
-router.delete("/deleteEXCO", async (req, res) => {
+router.delete("/deleteUser", async (req, res) => {
   try {
     const data = req.query;
-    const user_id = parseInt(data.user_id, 10); // Make sure user_id is interpreted as a number
-    const deletedEXCO = await deleteEXCO(user_id); // Deleted user details are in `deletedEXCO`
-    res.status(200).send("Deleted EXCO user");
+    const user_id = data.user_id; 
+    const deletedUser= await deleteUser(user_id); // Deleted user details are in `deletedEXCO`
+    res.status(200).send("Deleted User");
   } catch (err) {
-    if (err.message === "EXCO user has already been delete") {
+    if (err.message === "User has already been deleted") {
       res.status(404).send(err.message);
-    } else if (err.message === "EXCO user does not exist") {
+    } else if (err.message === "User does not exist") {
       res.status(404).send(err.message);
     } else if (err.message === "User ID must be a positive integer") {
       res.status(400).send(err.message);
@@ -112,12 +113,12 @@ router.delete("/deleteEXCO", async (req, res) => {
 // however since the query for specific type of user can be rather complicated
 // we use a post request that enables the use of JSON body data to be passed as part
 // of the request.
-router.post("/getEXCOsByAttribute", async (req, res) => {
+router.post("/getUsersByAttribute", async (req, res) => {
   const data = req.body;
   try {
-    const result = await getEXCOsByAttribute(data);
+    const result = await getUsersByAttribute(data);
     if (!result) {
-      return res.status(404).send("EXCO with such attributes does not exist");
+      return res.status(404).send("User with such attributes does not exist");
     }
     res.status(200).send(result);
   } catch (err) {

@@ -2,26 +2,11 @@ CREATE DATABASE esc_db;
 
 CREATE DATABASE esc_db_test;
 
-CREATE TABLE EXCO (
-    user_id SERIAL PRIMARY KEY,
+CREATE TABLE users(
+    user_id VARCHAR PRIMARY KEY NOT NULL,
     name VARCHAR NOT NULL,
     email VARCHAR NOT NULL,
-    outstanding_epf INT,
-    is_deleted BOOLEAN DEFAULT false
-);
-
-CREATE TABLE OSL (
-    user_id SERIAL PRIMARY KEY,
-    name VARCHAR NOT NULL,
-    email VARCHAR NOT NULL,
-    outstanding_epf INT,
-    is_deleted BOOLEAN DEFAULT false
-);
-
-CREATE TABLE ROOT (
-    user_id SERIAL PRIMARY KEY,
-    name VARCHAR NOT NULL,
-    email VARCHAR NOT NULL,
+    user_type VARCHAR NOT NULL,
     outstanding_epf INT,
     is_deleted BOOLEAN DEFAULT false
 );
@@ -29,7 +14,7 @@ CREATE TABLE ROOT (
 CREATE TABLE epfs (
     epf_id SERIAL PRIMARY KEY,
     status VARCHAR, 
-    exco_user_id INT,
+    exco_user_id VARCHAR,
     date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     a_name VARCHAR,
@@ -134,7 +119,7 @@ CREATE TABLE epfs (
 
     CONSTRAINT fk_exco
         FOREIGN KEY(exco_user_id)
-            REFERENCES exco(user_id) 
+            REFERENCES users(user_id) 
 );
 
 CREATE TABLE FILES (
