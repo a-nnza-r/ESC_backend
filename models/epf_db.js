@@ -198,7 +198,7 @@ export async function count_outstanding_EPF(pool = defaultPool) {
       ["Approved"]
     );
 
-    await pool.query(`UPDATE users SET outstanding_epf=$1 WHERE user_type != $2`, [
+    await pool.query(`UPDATE users SET outstanding_epf = $1 WHERE user_type != $2`, [
       result["rows"][0]["count"], "EXCO"
     ]);
     await client.query("COMMIT");
@@ -465,8 +465,8 @@ export async function createEPF(
 
     //Check for valid exco_user_id
     const valid_exco_user_id = await pool.query(
-      `SELECT COUNT(*) FROM users WHERE user_id=$1 AND user_type=$2`,
-      [exco_user_id,"EXCO"]
+      `SELECT COUNT(*) FROM users WHERE user_id=$1`,
+      [exco_user_id]
     );
     if (valid_exco_user_id.rows[0]["count"] == 0) {
       throw new Error("Non-existent exco user id");
@@ -746,8 +746,8 @@ export async function updateEPF(
 
     //Check for valid exco_user_id
     const valid_exco_user_id = await pool.query(
-      `SELECT COUNT(*) FROM users WHERE user_id=$1 AND user_type=$2`,
-      [exco_user_id,"EXCO"]
+      `SELECT COUNT(*) FROM users WHERE user_id=$1`,
+      [exco_user_id]
     );
     if (valid_exco_user_id.rows[0]["count"] == 0) {
       throw new Error("Non-existent exco user id");
@@ -807,53 +807,3 @@ export async function deleteEPF(epf_id, pool = defaultPool) {
   }
 }
 
-export async function getEPFbyAttribute(attributes) {
-  const pool = new Pool(credentials);
-
-  const keys = Object.keys(attributes).filter((key) => key !== "sort");
-
-  // Check for required properties in attribute objects
-  for (const key of keys) {
-    if (
-      !attributes[key].hasOwnProperty("value") ||
-      !attributes[key].hasOwnProperty("operator")
-    ) {
-      throw new Error(
-        `Attribute "${key}" must have "value" and "operator" properties`
-      );
-    }
-  }
-
-  const conditions = keys.map(
-    (key, index) => `${key}${attributes[key].operator}$${index + 1}`
-  );
-
-  const values = keys.map((key) => attributes[key].value);
-
-  let query = `SELECT * FROM EPFS WHERE ${conditions.join(
-    " AND "
-  )} AND is_deleted = false`;
-
-  if (attributes.sort) {
-    // Additional check for required properties in "sort" attribute
-    if (
-      !attributes.sort.hasOwnProperty("column") ||
-      !attributes.sort.hasOwnProperty("direction")
-    ) {
-      throw new Error(
-        `Sort property must have "column" and "direction" properties`
-      );
-    }
-    query += ` ORDER BY ${attributes.sort.column} ${attributes.sort.direction}`;
-  }
-
-  const result = await pool.query(query, values);
-
-  await pool.end();
-
-  if (result.rowCount === 0) {
-    return null;
-  }
-
-  return result["rows"];
-}

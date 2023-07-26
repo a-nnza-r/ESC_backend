@@ -13,8 +13,7 @@ import {
   getUsers,
   getEXCOEPFs,
   updateUser,
-  deleteUser,
-  getUsersByAttribute,
+  deleteUser
 } from "../models/user_db.js";
 const router = express.Router();
 
@@ -106,24 +105,6 @@ router.delete("/deleteUser", async (req, res) => {
       console.error(err);
       res.status(500).send("Server Error");
     }
-  }
-});
-
-// this End point is essentially does the task of an get request
-// however since the query for specific type of user can be rather complicated
-// we use a post request that enables the use of JSON body data to be passed as part
-// of the request.
-router.post("/getUsersByAttribute", async (req, res) => {
-  const data = req.body;
-  try {
-    const result = await getUsersByAttribute(data);
-    if (!result) {
-      return res.status(404).send("User with such attributes does not exist");
-    }
-    res.status(200).send(result);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Server Error");
   }
 });
 

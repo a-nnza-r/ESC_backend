@@ -1,6 +1,6 @@
 import {createEPF,getEPF,updateEPF} from "../../models/epf_db.js";
-import {createEXCO} from "../../models/exco_db.js";
-import {createPool, deleteFromEXCOs, deleteFromEPFs} from "./epf_test_utils.js";
+import {createUser} from "../../models/user_db.js";
+import {createPool, deleteFromUsers, deleteFromEPFs} from "./epf_test_utils.js";
 
 import path from "path";
 import fs from "fs";
@@ -10,11 +10,8 @@ let pool;
 describe("updateEPF", () => {
     beforeAll(async () => {
         pool = createPool();
-        await deleteFromEXCOs(pool);
-
-        const name = "user 1";
-        const email = "user1@mymail.sutd.edu.sg";
-        await createEXCO(name, email, pool);
+        await deleteFromUsers(pool);
+        await createUser("1", "name 1", "name_1@mymail.sutd.edu.sg", "EXCO", pool);
       });
 
 
