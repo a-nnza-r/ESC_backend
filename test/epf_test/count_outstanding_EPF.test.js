@@ -1,8 +1,6 @@
 import {count_outstanding_EPF, createEPF, updateEPF, deleteEPF} from "../../models/epf_db.js";
-import {createEXCO} from "../../models/exco_db.js";
-import {createOSL} from "../../models/osl_db.js";
-import {createROOT} from "../../models/root_db.js";
-import {createPool, deleteFromEXCOs, deleteFromOSLs, deleteFromROOTs, deleteFromEPFs} from "./epf_test_utils.js";
+import {createUser} from "../../models/user_db.js";
+import {createPool, deleteFromUsers, deleteFromEPFs} from "./epf_test_utils.js";
 
 import path from "path";
 import fs from "fs";
@@ -12,16 +10,14 @@ let pool;
 describe("count_outstanding_EPF", () => {
     beforeAll(async () => {
         pool = createPool();
-        await deleteFromEXCOs(pool);
-        await deleteFromOSLs(pool);
-        await deleteFromROOTs(pool);
+        await deleteFromUsers(pool);
 
-        await createEXCO("user 1", "user1@mymail.sutd.edu.sg", pool);
-        await createEXCO("user 2", "user2@mymail.sutd.edu.sg", pool);
-        await createOSL("user 1", "user1@mymail.sutd.edu.sg", pool);
-        await createOSL("user 2", "user2@mymail.sutd.edu.sg", pool);
-        await createROOT("user 1", "user1@mymail.sutd.edu.sg", pool);
-        await createROOT("user 2", "user2@mymail.sutd.edu.sg", pool);
+        await createUser("1", "name 1", "name_1@mymail.sutd.edu.sg", "EXCO", pool);
+        await createUser("2", "name 2", "name_2@mymail.sutd.edu.sg", "EXCO", pool);
+        await createUser("3", "name 3", "name_3@mymail.sutd.edu.sg", "OSL", pool);
+        await createUser("4", "name 4", "name_4@mymail.sutd.edu.sg", "OSL", pool);
+        await createUser("5", "name 5", "name_5@mymail.sutd.edu.sg", "ROOT", pool);
+        await createUser("6", "name 6", "name_6@mymail.sutd.edu.sg", "ROOT", pool);
       });
 
 
@@ -386,16 +382,16 @@ describe("count_outstanding_EPF", () => {
 
           await count_outstanding_EPF(pool)
           
-          const result_EXCO_1 = await pool.query(`SELECT outstanding_epf FROM EXCO WHERE user_id=1`);
+          const result_EXCO_1 = await pool.query(`SELECT outstanding_epf FROM users WHERE user_id='1'`);
           expect(result_EXCO_1["rows"][0]["outstanding_epf"]).toBe(0)
 
-          const result_EXCO_2 = await pool.query(`SELECT outstanding_epf FROM EXCO WHERE user_id=2`);
+          const result_EXCO_2 = await pool.query(`SELECT outstanding_epf FROM users WHERE user_id='2'`);
           expect(result_EXCO_2["rows"][0]["outstanding_epf"]).toBe(1)
 
-          const result_OSL = await pool.query(`SELECT outstanding_epf FROM OSL`);
+          const result_OSL = await pool.query(`SELECT outstanding_epf FROM users WHERE user_type='OSL'`);
           const OSL_check = result_OSL.rows.every((row) => row["outstanding_epf"] === 1);
 
-          const result_ROOT = await pool.query(`SELECT outstanding_epf FROM ROOT`);
+          const result_ROOT = await pool.query(`SELECT outstanding_epf FROM users WHERE user_type='ROOT'`);
           const ROOT_check = result_ROOT.rows.every((row) => row["outstanding_epf"] === 1);
           
           expect(OSL_check).toBeTruthy();

@@ -17,29 +17,11 @@ function createPool() {
   return new Pool(testCredentials);
 }
 
-async function deleteFromEXCOs(pool) {
+async function deleteFromUsers(pool) {
   try {
-    await pool.query("TRUNCATE TABLE EXCO RESTART IDENTITY CASCADE;");
+    await pool.query("TRUNCATE TABLE users RESTART IDENTITY CASCADE;");
   } catch (e) {
-    console.error("Error on EXCO truncate:", e.stack);
-    throw e;
-  }
-}
-
-async function deleteFromOSLs(pool) {
-  try {
-    await pool.query("TRUNCATE TABLE OSL RESTART IDENTITY CASCADE;");
-  } catch (e) {
-    console.error("Error on OSL truncate:", e.stack);
-    throw e;
-  }
-}
-
-async function deleteFromROOTs(pool) {
-  try {
-    await pool.query("TRUNCATE TABLE ROOT RESTART IDENTITY CASCADE;");
-  } catch (e) {
-    console.error("Error on ROOT truncate:", e.stack);
+    console.error("Error on users truncate:", e.stack);
     throw e;
   }
 }
@@ -55,8 +37,6 @@ async function deleteFromEPFs(pool) {
 
 module.exports = {
   createPool,
-  deleteFromEXCOs,
-  deleteFromOSLs,
-  deleteFromROOTs,
+  deleteFromUsers,
   deleteFromEPFs
 };

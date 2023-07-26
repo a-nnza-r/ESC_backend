@@ -1,7 +1,7 @@
 {
     "epf_id": 1,
     "status": "Pending",
-    "exco_user_id": 1,
+    "exco_user_id": "1",
     "a_name": "user 1",
     "a_student_id": 1000001,
     "a_organisation": "organisation 1",

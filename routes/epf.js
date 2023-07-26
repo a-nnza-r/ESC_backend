@@ -13,8 +13,7 @@ import {
   getEPF,
   getEPFs,
   updateEPF,
-  deleteEPF,
-  getEPFbyAttribute,
+  deleteEPF
 } from "../models/epf_db.js";
 const router = express.Router();
 
@@ -258,25 +257,6 @@ router.delete("/deleteEPF", async (req, res) => {
     }
   } catch (err) {
     console.error(err);
-    res.status(500).send("Server Error");
-  }
-});
-
-// this End point is essentially does the task of an get request
-// however since the query for specific type of user can be rather complicated
-// we use a post request that enables the use of JSON body data to be passed as part
-// of the request.
-router.post("/getEPFbyAttribute", async (req, res) => {
-  try {
-    const data = req.body;
-    const result = await getEPFbyAttribute(data);
-    if (result === null) {
-      res.status(404).send("No EPFs found for the given attributes");
-    } else {
-      res.status(200).send(result);
-    }
-  } catch (err) {
-    console.log(err);
     res.status(500).send("Server Error");
   }
 });
