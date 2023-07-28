@@ -90,97 +90,17 @@ const epf_db_datatypes_create = {
   g_comments_root: "string",
 };
 
-const epf_db_datatypes_update = {
-  epf_id: "number",
-  status: "string",
-  exco_user_id: "string",
-  a_name: "string",
-  a_student_id: "number",
-  a_organisation: "string",
-  a_contact_number: "number",
-  a_email: "string",
-  a_comments_osl: "string",
-  a_comments_root: "string",
-  b_event_name: "string",
-  b_target_audience: "string",
-  b_event_schedule: "string",
-  b_expected_turnout: "number",
-  b_event_objective: "string",
-  b_comments_osl: "string",
-  b_comments_root: "string",
-  c1_date: "object",
-  c1_time: "object",
-  c1_activity_and_description: "object",
-  c1_venue: "object",
-  c2_date: "object",
-  c2_time: "object",
-  c2_activity_and_description: "object",
-  c2_venue: "object",
-  c3_date: "object",
-  c3_time: "object",
-  c3_activity_and_description: "object",
-  c3_venue: "object",
-  c3_cleanup_date: "object",
-  c3_cleanup_time: "object",
-  c3_cleanup_activity_and_description: "object",
-  c3_cleanup_venue: "object",
-  c_comments_osl: "string",
-  c_comments_root: "string",
-  d1a_club_income_fund: "number",
-  d1a_osl_seed_fund: "number",
-  d1a_donation: "number",
-  d1b_revenue: "number",
-  d1b_donation_or_scholarship: "number",
-  d1b_total_source_of_funds: "number",
-  d11_items_goods_services: "object",
-  d11_price: "object",
-  d11_quantity: "object",
-  d11_amount: "object",
-  d11_total_revenue: "number",
-  d2_items: "object",
-  d2_reason_for_purchase: "object",
-  d2_venue: "object",
-  d2_total_expenditure: "number",
-  d_comments_osl: "string",
-  d_comments_root: "string",
-  e_personal_data: "number",
-  e_comments_osl: "string",
-  e_comments_root: "string",
-  f_name: "object",
-  f_student_id: "object",
-  f_position: "object",
-  f_comments_osl: "string",
-  f_comments_root: "string",
-  g_1_1: "string",
-  g_1_2: "string",
-  g_1_3: "string",
-  g_2_1: "string",
-  g_2_2: "string",
-  g_2_3: "string",
-  g_3_1: "string",
-  g_3_2: "string",
-  g_3_3: "string",
-  g_4_1: "string",
-  g_4_2: "string",
-  g_4_3: "string",
-  g_5_1: "string",
-  g_5_2: "string",
-  g_5_3: "string",
-  g_6_1: "string",
-  g_6_2: "string",
-  g_6_3: "string",
-  g_7_1: "string",
-  g_7_2: "string",
-  g_7_3: "string",
-  g_comments_osl: "string",
-  g_comments_root: "string",
-};
+var epf_db_datatypes_update = { ...epf_db_datatypes_create };
+epf_db_datatypes_update.epf_id = "number";
 
 export async function count_outstanding_EPF(pool = defaultPool) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    const exco_user_ids = await pool.query(`SELECT user_id FROM users WHERE user_type=$1`, ["EXCO"]);
+    const exco_user_ids = await pool.query(
+      `SELECT user_id FROM users WHERE user_type=$1`,
+      ["EXCO"]
+    );
     for (let i in exco_user_ids["rows"]) {
       let result = await pool.query(
         `SELECT COUNT(*) FROM EPFS WHERE status != $1 AND exco_user_id=$2 AND is_deleted = false`,
@@ -198,9 +118,10 @@ export async function count_outstanding_EPF(pool = defaultPool) {
       ["Approved"]
     );
 
-    await pool.query(`UPDATE users SET outstanding_epf = $1 WHERE user_type != $2`, [
-      result["rows"][0]["count"], "EXCO"
-    ]);
+    await pool.query(
+      `UPDATE users SET outstanding_epf = $1 WHERE user_type != $2`,
+      [result["rows"][0]["count"], "EXCO"]
+    );
     await client.query("COMMIT");
   } catch (e) {
     await client.query("ROLLBACK");
@@ -477,7 +398,6 @@ export async function createEPF(
       throw new Error("Event name missing");
     }
 
-
     const query = `INSERT INTO EPFS(${column_names}) VALUES (${columnParams}) RETURNING *`;
     const result = await pool.query(query, values);
     await client.query("COMMIT");
@@ -505,7 +425,7 @@ export async function getEPF(epf_id, pool = defaultPool) {
       `SELECT COUNT(*) FROM EPFS WHERE epf_id = $1 AND is_deleted = false`,
       [epf_id]
     );
-    if (valid_epf_id.rows[0]["count"] == 0) {
+    if (valid_epf_id.rows[0]["count"] === 0) {
       throw new Error("Non-existent epf");
     }
 
@@ -806,4 +726,3 @@ export async function deleteEPF(epf_id, pool = defaultPool) {
     client.release();
   }
 }
-

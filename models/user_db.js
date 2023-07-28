@@ -1,16 +1,29 @@
 import { createPool } from "./db_utils.js";
 const defaultPool = createPool();
 
-export async function createUser(user_id, name, email, type, pool = defaultPool) {
+export async function createUser(
+  user_id,
+  name,
+  email,
+  type,
+  pool = defaultPool
+) {
   const [username, domain] = email.split("@");
+  // User ID validation
+  if (!user_id) {
+    throw new Error("User ID must be provided");
+  }
   // Name validation
   if (!name) {
     throw new Error("Name must be provided");
   }
+  // Type validation
+  if (!type || !(type === "root" || type === "osl" || type === "exco")) {
+    throw new Error("Invalid user type. Must be 'root', 'osl', or 'exco'");
+  }
   // Email format validation
   const isValidUsername = /^[^\s@]+$/;
   const isValidDomain = /^[^\s@]+\.[^\s@]+$/;
-
   if (
     !email.includes("@") ||
     !isValidUsername.test(username) ||
@@ -29,11 +42,12 @@ export async function createUser(user_id, name, email, type, pool = defaultPool)
       user_id,
       name,
       email,
-      type
+      type,
     ]);
     if (duplicateResult.rows.length > 0) throw new Error("Duplicate entry");
 
-    const query = "INSERT INTO users (user_id, name, email, user_type) VALUES ($1, $2, $3, $4) RETURNING *";
+    const query =
+      "INSERT INTO users (user_id, name, email, user_type) VALUES ($1, $2, $3, $4) RETURNING *";
     const result = await client.query(query, [user_id, name, email, type]);
 
     await client.query("COMMIT");
@@ -53,7 +67,8 @@ export async function getUser(user_id, pool = defaultPool) {
   }
   const client = await pool.connect();
   try {
-    const query = "SELECT * FROM users WHERE user_id = $1 AND is_deleted = false";
+    const query =
+      "SELECT * FROM users WHERE user_id = $1 AND is_deleted = false";
     const result = await client.query(query, [user_id]);
     return result["rows"];
   } finally {
@@ -85,15 +100,20 @@ export async function getEXCOEPFs(user_id, pool = defaultPool) {
   }
 }
 
-export async function updateUser(user_id, name, email, type, pool = defaultPool) {
+export async function updateUser(
+  user_id,
+  name,
+  email,
+  type,
+  pool = defaultPool
+) {
   // Check if necessary parameters are provided
-  if (!user_id || !name || !email) {
+  if (!user_id || !name || !email || !type) {
     throw new Error(
       "Missing parameters: user_id, name, email, and type are required."
     );
   }
 
-  
   // Check if email format is valid
   const emailRegex = /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/;
   if (!emailRegex.test(email)) {
@@ -149,4 +169,3 @@ export async function deleteUser(user_id, pool = defaultPool) {
     client.release();
   }
 }
-

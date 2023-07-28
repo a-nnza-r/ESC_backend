@@ -22,7 +22,7 @@ async function deleteFromTables(pool) {
   const client = await pool.connect();
   try {
     await client.query("TRUNCATE TABLE epfs CASCADE;");
-    await client.query("TRUNCATE TABLE EXCO CASCADE;");
+    await client.query("TRUNCATE TABLE users CASCADE;");
   } catch (e) {
     console.error("Error on truncating tables:", e.stack);
     throw e;
