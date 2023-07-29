@@ -18,29 +18,38 @@ function createPool() {
 }
 
 async function deleteFromUsers(pool) {
+  const client = await pool.connect();
   try {
     await pool.query("TRUNCATE TABLE users RESTART IDENTITY CASCADE;");
   } catch (e) {
     console.error("Error on users truncate:", e.stack);
     throw e;
+  } finally {
+    client.release();
   }
 }
 
 async function deleteFromEPFs(pool) {
+  const client = await pool.connect();
   try {
     await pool.query("TRUNCATE TABLE epfs RESTART IDENTITY CASCADE;");
   } catch (e) {
     console.error("Error on epfs truncate:", e.stack);
     throw e;
+  } finally {
+    client.release();
   }
 }
 
 async function deleteFromFiles(pool) {
-    try {
+  const client = await pool.connect();  
+  try {
       await pool.query("TRUNCATE TABLE files RESTART IDENTITY CASCADE;");
     } catch (e) {
       console.error("Error on files truncate:", e.stack);
       throw e;
+    } finally {
+      client.release();
     }
   }
 
