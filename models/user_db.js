@@ -92,7 +92,7 @@ export async function getEXCOEPFs(user_id, pool = defaultPool) {
   const client = await pool.connect();
   try {
     const query =
-      "SELECT * FROM EPFS WHERE exco_user_id = $1 AND is_deleted = false";
+      "SELECT * FROM epfs WHERE exco_user_id=$1 AND is_deleted=false";
     const result = await client.query(query, [user_id]);
     return result["rows"];
   } finally {

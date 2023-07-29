@@ -24,7 +24,7 @@ router.post("/createUser", async (req, res) => {
       data["user_id"],
       data["name"],
       data["email"],
-      data["type"]
+      data["user_type"]
     ); // newUser will contain the JSON object returned by createEXCO()
     res.status(201).send(`Created User`);
   } catch (err) {
@@ -69,7 +69,7 @@ router.get("/getUsers", async (req, res) => {
 router.get("/getEXCOEPFs", async (req, res) => {
   try {
     const data = req.query;
-    const result = await getEXCOEPFs(data.user_id);
+    const result = await getEXCOEPFs(data.exco_user_id);
     if (result.length === 0) {
       res.status(404).send("No EPFs found for the given EXCO user");
     } else {
@@ -88,7 +88,7 @@ router.put("/updateUser", async (req, res) => {
       data["user_id"],
       data["name"],
       data["email"],
-      data["type"]
+      data["user_type"]
     );
     res.status(200).send(`Updated User`);
   } catch (err) {
