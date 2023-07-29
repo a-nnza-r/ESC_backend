@@ -9,7 +9,7 @@ let pool;
 
 describe("count_outstanding_EPF", () => {
     beforeAll(async () => {
-        pool = createPool();
+        pool = await createPool();
         await deleteFromUsers(pool);
 
         await createUser("1", "name 1", "name_1@mymail.sutd.edu.sg", "exco", pool);
