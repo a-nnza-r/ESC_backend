@@ -11,7 +11,7 @@ describe("deleteEPF", () => {
     beforeAll(async () => {
         pool = createPool();
         await deleteFromUsers(pool);
-        await createUser("1", "name 1", "name_1@mymail.sutd.edu.sg", "EXCO", pool);
+        await createUser("1", "name 1", "name_1@mymail.sutd.edu.sg", "exco", pool);
       });
 
 

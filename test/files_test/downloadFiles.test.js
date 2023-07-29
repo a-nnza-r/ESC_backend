@@ -9,17 +9,11 @@ import AdmZip from 'adm-zip';
 
 let pool;
 
-function sleep(milliseconds) {
-    return new Promise((resolve) => {
-      setTimeout(resolve, milliseconds);
-    });
-  }
-
 describe("uploadFiles", () => {
     beforeAll(async () => {
         pool = createPool();
         await deleteFromUsers(pool);
-        await createUser("1", "name 1", "name_1@mymail.sutd.edu.sg", "EXCO", pool);
+        await createUser("1", "name 1", "name_1@mymail.sutd.edu.sg", "exco", pool);
       });
 
 

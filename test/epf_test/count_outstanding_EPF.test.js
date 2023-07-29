@@ -12,12 +12,12 @@ describe("count_outstanding_EPF", () => {
         pool = createPool();
         await deleteFromUsers(pool);
 
-        await createUser("1", "name 1", "name_1@mymail.sutd.edu.sg", "EXCO", pool);
-        await createUser("2", "name 2", "name_2@mymail.sutd.edu.sg", "EXCO", pool);
-        await createUser("3", "name 3", "name_3@mymail.sutd.edu.sg", "OSL", pool);
-        await createUser("4", "name 4", "name_4@mymail.sutd.edu.sg", "OSL", pool);
-        await createUser("5", "name 5", "name_5@mymail.sutd.edu.sg", "ROOT", pool);
-        await createUser("6", "name 6", "name_6@mymail.sutd.edu.sg", "ROOT", pool);
+        await createUser("1", "name 1", "name_1@mymail.sutd.edu.sg", "exco", pool);
+        await createUser("2", "name 2", "name_2@mymail.sutd.edu.sg", "exco", pool);
+        await createUser("3", "name 3", "name_3@mymail.sutd.edu.sg", "osl", pool);
+        await createUser("4", "name 4", "name_4@mymail.sutd.edu.sg", "osl", pool);
+        await createUser("5", "name 5", "name_5@mymail.sutd.edu.sg", "root", pool);
+        await createUser("6", "name 6", "name_6@mymail.sutd.edu.sg", "root", pool);
       });
 
 

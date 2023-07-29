@@ -8,12 +8,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 import {
-  update_outstanding_EPF_count,
+  count_outstanding_EPF,
   createEPF,
   getEPF,
   getEPFs,
   updateEPF,
-  deleteEPF,
+  deleteEPF
 } from "../models/epf_db.js";
 const router = express.Router();
 
@@ -21,7 +21,7 @@ router.post("/createEPF", async (req, res) => {
   const data = req.body;
 
   try {
-    const { created_EPF, epf_count } = await createEPF(
+    const epf_id = await createEPF(
       data["status"],
       data["exco_user_id"],
       data["a_name"],
@@ -105,10 +105,10 @@ router.post("/createEPF", async (req, res) => {
       data["g_comments_osl"],
       data["g_comments_root"]
     );
-
+    await count_outstanding_EPF();
     res
       .status(201)
-      .send(`Created EPF. Current user has ${epf_count} EPFs outstanding`);
+      .send(`Created EPF`);
   } catch (err) {
     console.log("Failed to create EPF.", err);
     res.status(500).send("Failed to create EPF.");
@@ -133,11 +133,7 @@ router.get("/getEPF", async (req, res) => {
 router.get("/getEPFs", async (req, res) => {
   try {
     const result = await getEPFs();
-    if (result === null) {
-      res.status(404).send("No EPFs found !");
-    } else {
-      res.status(200).send(result);
-    }
+    res.status(200).send(result);
   } catch (err) {
     console.error(err);
     res.status(500).send("Server Error");
@@ -234,8 +230,10 @@ router.put("/updateEPF", async (req, res) => {
     );
 
     if (updateCheck["epf_id"] == data["epf_id"]) {
-      await update_outstanding_EPF_count();
-      res.status(200).send(`Updated EPF`);
+      await count_outstanding_EPF();
+      res
+        .status(200)
+        .send(`Updated EPF`);
     } else {
       res.status(400).send("EPF not found or could not update");
     }
@@ -250,8 +248,10 @@ router.delete("/deleteEPF", async (req, res) => {
   try {
     const deletedEPF = await deleteEPF(parseInt(data.epf_id));
     if (deletedEPF["epf_id"] == data.epf_id) {
-      await update_outstanding_EPF_count();
-      res.status(200).send(`Deleted EPF`);
+      await count_outstanding_EPF();
+      res
+        .status(200)
+        .send(`Deleted EPF`);
     } else {
       res.status(404).send("EPF not found or could not delete");
     }
