@@ -1,7 +1,6 @@
 /*
 Logic for EXCO Routes
 */
-
 import express from "express";
 import cors from 'cors';
 const app = express()
@@ -9,10 +8,10 @@ app.use(cors())
 app.use(express.json())
 import multer from "multer";
 const upload = multer({ storage: multer.memoryStorage() });
-import { uploadFiles, getFiles, deleteFiles } from "../models/files_db.js";
+import { uploadFiles, getFiles, downloadFiles, deleteFiles } from "../models/files_db.js";
 const router = express.Router();
 
-router.post("/uploadFiles", upload.array("Files", 3), async (req, res) => {
+router.post("/uploadFiles", upload.any(), async (req, res) => {
   try {
     const files = req.files;
     const epf_id = req.body.epf_id;
@@ -28,14 +27,29 @@ router.get("/getFiles", async (req, res) => {
   try {
     const data = req.query;
     const file_metadata = await getFiles(data.epf_id);
-    res.status(200).send({ message: "Downloaded Files", files: file_metadata });
+    res.status(200).send(file_metadata);
   } catch (e) {
     console.error(e);
     res.status(500).send("Server error");
   }
 });
 
-router.delete("/deleteFiles", upload.array("Files", 3), async (req, res) => {
+router.get("/downloadFiles", async (req, res) => {
+  try {
+    const data = req.query;
+    const download_file_result = await downloadFiles(data.epf_id);
+
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename=${download_file_result["epf_name"]}_files.zip`);
+
+    res.status(200).send(download_file_result["zip_file"])
+  } catch (e) {
+    console.error(e);
+    res.status(500).send("Server error");
+  }
+});
+
+router.delete("/deleteFiles", upload.any(), async (req, res) => {
   try {
     const data = req.body;
     const file_ids = data["file_ids"];
