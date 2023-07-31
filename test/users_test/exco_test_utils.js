@@ -21,9 +21,13 @@ async function createPool() {
 async function deleteFromTables(pool) {
   const client = await pool.connect();
   try {
+    await client.query("BEGIN");
+    await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
     await client.query("TRUNCATE TABLE epfs CASCADE;");
     await client.query("TRUNCATE TABLE users CASCADE;");
+    await client.query("COMMIT");
   } catch (e) {
+    await client.query("ROLLBACK");
     console.error("Error on truncating tables:", e.stack);
     throw e;
   } finally {
