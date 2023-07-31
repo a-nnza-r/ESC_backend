@@ -684,7 +684,6 @@ export async function updateEPF(
 
     for (let i = 0; i < values.length; i++) {
       if (typeof values[i] !== datatypes[i]) {
-        console.log(values[i], datatypes[i]);
         throw new Error("Unexpected data type");
       }
     }
