@@ -51,6 +51,7 @@ describe("getUser", () => {
   });
 
   afterAll(async () => {
+    await deleteFromTables(pool);
     await pool.end();
   });
 });

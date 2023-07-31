@@ -109,6 +109,7 @@ describe("getUsers", () => {
   });
 
   afterAll(async () => {
+    await deleteFromTables(pool);
     await pool.end();
   });
 });

@@ -1,9 +1,7 @@
-/*
-Logic for EPF DB
-*/
-
+const { Mutex } = require("async-mutex");
 import { createPool } from "./db_utils.js";
 const defaultPool = createPool();
+const epfDBmutex = new Mutex();
 
 const epf_db_datatypes_create = {
   status: "string",
@@ -93,12 +91,9 @@ const epf_db_datatypes_create = {
 var epf_db_datatypes_update = { ...epf_db_datatypes_create };
 epf_db_datatypes_update = { epf_id: "number", ...epf_db_datatypes_create };
 
-export async function update_outstanding_EPF_count(pool = defaultPool) {
-  const client = await pool.connect();
+export async function update_outstanding_EPF_count(client) {
   try {
-    await client.query("BEGIN");
-    await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
-    const exco_user_ids = await pool.query(
+    const exco_user_ids = await client.query(
       `SELECT user_id FROM users WHERE user_type=$1`,
       ["exco"]
     );
@@ -125,35 +120,20 @@ export async function update_outstanding_EPF_count(pool = defaultPool) {
       `UPDATE users SET outstanding_epf=$1 WHERE user_type!=$2`,
       [total_count["rows"][0]["count"], "exco"]
     );
-
-    await client.query("COMMIT");
   } catch (e) {
-    await client.query("ROLLBACK");
     throw e;
-  } finally {
-    client.release();
   }
 }
 
-export async function get_outstanding_EPF_count(
-  exco_user_id,
-  pool = defaultPool
-) {
-  const client = await pool.connect();
+export async function get_outstanding_EPF_count(exco_user_id, client) {
   try {
-    await client.query("BEGIN");
-    await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
     let result = await pool.query(
       `SELECT COUNT(*) FROM EPFS WHERE status != $1 AND exco_user_id=$2 AND is_deleted = false`,
       ["Approved", exco_user_id]
     );
-    await client.query("COMMIT");
     return result.rows[0]["count"];
   } catch (e) {
-    await client.query("ROLLBACK");
     throw e;
-  } finally {
-    client.release();
   }
 }
 
@@ -401,6 +381,7 @@ export async function createEPF(
   let epf_count = null;
 
   try {
+    await epfDBmutex.acquire();
     await client.query("BEGIN");
     await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
     //Check for datatypes
@@ -428,8 +409,8 @@ export async function createEPF(
     const query = `INSERT INTO EPFS(${column_names}) VALUES (${columnParams}) RETURNING *`;
     result = await pool.query(query, values);
 
-    epf_count = await get_outstanding_EPF_count(exco_user_id);
-    await update_outstanding_EPF_count();
+    epf_count = await get_outstanding_EPF_count(exco_user_id, client);
+    await update_outstanding_EPF_count(client);
     await client.query("COMMIT");
     return { result: result["rows"][0], epf_count: epf_count };
   } catch (e) {
@@ -437,6 +418,7 @@ export async function createEPF(
     throw e;
   } finally {
     client.release();
+    epfDBmutex.release();
   }
 }
 
@@ -444,6 +426,7 @@ export async function getEPF(epf_id, pool = defaultPool) {
   const client = await pool.connect();
   let result = null;
   try {
+    await epfDBmutex.acquire();
     await client.query("BEGIN");
     await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
     //Check for epf_id data type
@@ -474,6 +457,7 @@ export async function getEPF(epf_id, pool = defaultPool) {
     throw e;
   } finally {
     client.release();
+    epfDBmutex.release();
   }
 }
 
@@ -481,6 +465,7 @@ export async function getEPFs(pool = defaultPool) {
   const client = await pool.connect();
   let result = null;
   try {
+    await epfDBmutex.acquire();
     await client.query("BEGIN");
     await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
     result = await client.query(`SELECT * FROM EPFS WHERE is_deleted = false`);
@@ -490,6 +475,7 @@ export async function getEPFs(pool = defaultPool) {
     throw e;
   } finally {
     client.release();
+    epfDBmutex.release();
     if (result["rows"].length === 0) {
       return null;
     }
@@ -680,6 +666,7 @@ export async function updateEPF(
   let result = null;
 
   try {
+    await epfDBmutex.acquire();
     await client.query("BEGIN");
     await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
     //Check for datatypes
@@ -716,6 +703,7 @@ export async function updateEPF(
 
     const query = `UPDATE EPFS SET (${columnNames}) = (${columnParams}) WHERE epf_id=$1 AND is_deleted = false RETURNING *`;
     result = await client.query(query, values);
+    await update_outstanding_EPF_count(client);
     await client.query("COMMIT");
     return result.rows[0];
   } catch (e) {
@@ -723,6 +711,7 @@ export async function updateEPF(
     throw e;
   } finally {
     client.release();
+    epfDBmutex.release();
   }
 }
 
@@ -730,6 +719,7 @@ export async function deleteEPF(epf_id, pool = defaultPool) {
   const client = await pool.connect();
   let result = null;
   try {
+    await epfDBmutex.acquire();
     await client.query("BEGIN");
     await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
     //Check for epf_id data type
@@ -753,6 +743,7 @@ export async function deleteEPF(epf_id, pool = defaultPool) {
       `UPDATE FILES SET is_deleted = true WHERE epf_id = $1 AND is_deleted = false`,
       [epf_id]
     );
+    await update_outstanding_EPF_count(client);
     await client.query("COMMIT");
     //Returns {"epf_id": value}
     return result.rows[0];
@@ -761,5 +752,6 @@ export async function deleteEPF(epf_id, pool = defaultPool) {
     throw e;
   } finally {
     client.release();
+    epfDBmutex.release();
   }
 }

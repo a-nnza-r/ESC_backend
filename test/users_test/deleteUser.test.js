@@ -17,10 +17,6 @@ describe("deleteUser", () => {
     await deleteFromTables(pool);
   });
 
-  afterAll(async () => {
-    await pool.end();
-  });
-
   test("Test ID: 1 - Valid user ID, Delete user record by user ID", async () => {
     const testUserId = "User1";
     const testName = "Test User1";
@@ -75,5 +71,10 @@ describe("deleteUser", () => {
     await expect(deleteUser(undefined, pool)).rejects.toThrow(
       "User ID must be provided"
     );
+  });
+
+  afterAll(async () => {
+    await deleteFromTables(pool);
+    await pool.end();
   });
 });

@@ -1,5 +1,7 @@
 import { createPool } from "./db_utils.js";
 const defaultPool = createPool();
+const { Mutex } = require("async-mutex");
+const userDBmutex = new Mutex();
 
 export async function createUser(
   user_id,
@@ -35,6 +37,7 @@ export async function createUser(
   const client = await pool.connect();
 
   try {
+    await userDBmutex.acquire();
     await client.query("BEGIN");
     await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
     const duplicateCheckQuery =
@@ -59,6 +62,7 @@ export async function createUser(
     throw e;
   } finally {
     client.release();
+    userDBmutex.release();
   }
 }
 
@@ -66,51 +70,70 @@ export async function getUser(user_id, pool = defaultPool) {
   if (!user_id) {
     throw new Error("User ID must be provided");
   }
-  const client = await pool.connect();
 
   try {
-    await client.query("BEGIN");
-    await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
-    const query =
-      "SELECT * FROM users WHERE user_id = $1 AND is_deleted = false";
-    const result = await client.query(query, [user_id]);
-    await client.query("COMMIT");
-    return result["rows"];
+    // Acquire the lock
+    await userDBmutex.acquire();
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
+      const query =
+        "SELECT * FROM users WHERE user_id = $1 AND is_deleted = false";
+      const result = await client.query(query, [user_id]);
+      await client.query("COMMIT");
+      return result.rows;
+    } catch (e) {
+      await client.query("ROLLBACK");
+      throw e;
+    } finally {
+      client.release();
+      // Release the mutex lock
+      userDBmutex.release();
+    }
   } catch (e) {
-    await client.query("ROLLBACK");
+    // Handle errors related to acquiring the lock (unlikely but possible)
     throw e;
-  } finally {
-    client.release();
   }
 }
 
 export async function getUsers(pool = defaultPool) {
   const client = await pool.connect();
+
   try {
-    await client.query("BEGIN");
-    await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
-    const result = await client.query(
-      "SELECT * FROM users WHERE is_deleted = false;"
-    );
-    await client.query("COMMIT");
-    return result.rows;
-  } catch (e) {
-    await client.query("ROLLBACK");
-    throw e;
+    // Acquire the lock
+    await userDBmutex.acquire();
+
+    try {
+      await client.query("BEGIN");
+      await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
+      const result = await client.query(
+        "SELECT * FROM users WHERE is_deleted = false;"
+      );
+      await client.query("COMMIT");
+      return result.rows;
+    } catch (e) {
+      await client.query("ROLLBACK");
+      throw e;
+    }
   } finally {
+    // Ensure the mutex lock is released regardless of success or error
     client.release();
+    userDBmutex.release();
   }
 }
 
 export async function getEXCOEPFs(user_id, pool = defaultPool) {
   const client = await pool.connect();
   try {
+    await userDBmutex.acquire();
     const query =
       "SELECT * FROM epfs WHERE exco_user_id=$1 AND is_deleted=false";
     const result = await client.query(query, [user_id]);
     return result["rows"];
   } finally {
     client.release();
+    userDBmutex.release();
   }
 }
 
@@ -141,6 +164,7 @@ export async function updateUser(
 
   const client = await pool.connect();
   try {
+    await userDBmutex.acquire();
     await client.query("BEGIN");
     await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
     const response = await client.query(query, [name, email, type, user_id]);
@@ -151,8 +175,8 @@ export async function updateUser(
     await client.query("COMMIT");
     return response.rows[0]; // Return the updated record
   } finally {
-    await client.query("ROLLBACK");
     client.release();
+    userDBmutex.release();
   }
 }
 
@@ -164,6 +188,7 @@ export async function deleteUser(user_id, pool = defaultPool) {
   // Use try/catch/finally to ensure client is released even in case of error.
   const client = await pool.connect();
   try {
+    await userDBmutex.acquire();
     await client.query("BEGIN");
     await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
     const query =
@@ -188,5 +213,6 @@ export async function deleteUser(user_id, pool = defaultPool) {
   } finally {
     await client.query("ROLLBACK");
     client.release();
+    userDBmutex.release();
   }
 }
