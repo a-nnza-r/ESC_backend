@@ -103,20 +103,26 @@ export async function update_outstanding_EPF_count(pool = defaultPool) {
     );
 
     for (let i in exco_user_ids["rows"]) {
-      let result = await pool.query(
-        `SELECT COUNT(*) FROM EPFS WHERE status != $1 AND exco_user_id=$2 AND is_deleted = false`,
-        ["Approved", exco_user_ids["rows"][i]["user_id"]]
+      const userId = exco_user_ids["rows"][i]["user_id"];
+      let result = await client.query(
+        `SELECT COUNT(*) FROM EPFS WHERE status!=$1 AND exco_user_id=$2 AND is_deleted = false`,
+        ["Approved", userId]
       );
 
-      await pool.query(`UPDATE users SET outstanding_epf=$1 WHERE user_id=$2`, [
-        result["rows"][0]["count"],
-        exco_user_ids["rows"][i]["user_id"],
-      ]);
+      await client.query(
+        `UPDATE users SET outstanding_epf=$1 WHERE user_id=$2`,
+        [result["rows"][0]["count"], userId]
+      );
     }
 
-    const total_count = await pool.query(
+    const total_count = await client.query(
       `SELECT COUNT(*) FROM EPFS WHERE status != $1 AND is_deleted = false`,
       ["Approved"]
+    );
+
+    await client.query(
+      `UPDATE users SET outstanding_epf=$1 WHERE user_type!=$2`,
+      [total_count["rows"][0]["count"], "exco"]
     );
 
     await client.query("COMMIT");
@@ -419,15 +425,16 @@ export async function createEPF(
     }
     const query = `INSERT INTO EPFS(${column_names}) VALUES (${columnParams}) RETURNING *`;
     result = await pool.query(query, values);
+
+    epf_count = await get_outstanding_EPF_count(exco_user_id);
+    await update_outstanding_EPF_count();
+    await client.query("COMMIT");
+    return { result: result["rows"][0], epf_count: epf_count };
   } catch (e) {
     await client.query("ROLLBACK");
     throw e;
   } finally {
     client.release();
-    await update_outstanding_EPF_count();
-    epf_count = await get_outstanding_EPF_count(exco_user_id);
-    await client.query("COMMIT");
-    return { result: result["rows"][0], epf_count: epf_count };
   }
 }
 
@@ -447,7 +454,7 @@ export async function getEPF(epf_id, pool = defaultPool) {
       `SELECT COUNT(*) FROM EPFS WHERE epf_id = $1 AND is_deleted = false`,
       [epf_id]
     );
-    if (valid_epf_id.rows[0]["count"] === 0) {
+    if (valid_epf_id.rows[0]["count"] == 0) {
       throw new Error("Non-existent epf");
     }
 
@@ -455,17 +462,16 @@ export async function getEPF(epf_id, pool = defaultPool) {
       "SELECT * FROM EPFS WHERE epf_id = $1 AND is_deleted = false",
       [epf_id]
     );
-
     await client.query("COMMIT");
+    if (result["rows"].length === 0) {
+      return null;
+    }
+    return result["rows"];
   } catch (e) {
     await client.query("ROLLBACK");
     throw e;
   } finally {
     client.release();
-    if (result["rows"].length === 0) {
-      return null;
-    }
-    return result["rows"];
   }
 }
 
@@ -678,7 +684,6 @@ export async function updateEPF(
 
     for (let i = 0; i < values.length; i++) {
       if (typeof values[i] !== datatypes[i]) {
-        console.log(values[i], datatypes[i]);
         throw new Error("Unexpected data type");
       }
     }
