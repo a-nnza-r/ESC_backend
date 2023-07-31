@@ -127,7 +127,7 @@ export async function update_outstanding_EPF_count(client) {
 
 export async function get_outstanding_EPF_count(exco_user_id, client) {
   try {
-    let result = await pool.query(
+    let result = await client.query(
       `SELECT COUNT(*) FROM EPFS WHERE status != $1 AND exco_user_id=$2 AND is_deleted = false`,
       ["Approved", exco_user_id]
     );
@@ -394,7 +394,7 @@ export async function createEPF(
     }
 
     //Check for valid exco_user_id
-    const valid_exco_user_id = await pool.query(
+    const valid_exco_user_id = await client.query(
       `SELECT COUNT(*) FROM users WHERE user_id=$1`,
       [exco_user_id]
     );
@@ -407,7 +407,7 @@ export async function createEPF(
       throw new Error("Event name missing");
     }
     const query = `INSERT INTO EPFS(${column_names}) VALUES (${columnParams}) RETURNING *`;
-    result = await pool.query(query, values);
+    result = await client.query(query, values);
 
     epf_count = await get_outstanding_EPF_count(exco_user_id, client);
     await update_outstanding_EPF_count(client);
@@ -435,7 +435,7 @@ export async function getEPF(epf_id, pool = defaultPool) {
     }
 
     //Check for valid epf_id
-    const valid_epf_id = await pool.query(
+    const valid_epf_id = await client.query(
       `SELECT COUNT(*) FROM EPFS WHERE epf_id = $1 AND is_deleted = false`,
       [epf_id]
     );
@@ -443,7 +443,7 @@ export async function getEPF(epf_id, pool = defaultPool) {
       throw new Error("Non-existent epf");
     }
 
-    result = await pool.query(
+    result = await client.query(
       "SELECT * FROM EPFS WHERE epf_id = $1 AND is_deleted = false",
       [epf_id]
     );
