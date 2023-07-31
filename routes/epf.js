@@ -116,8 +116,8 @@ router.post("/createEPF", validateJSON_createEPF, async (req, res) => {
       .status(201)
       .send(`Created EPF`);
   } catch (err) {
-    console.log("Failed to create EPF.", err);
-    res.status(500).send("Failed to create EPF.");
+    console.log("Failed to create EPF: ", err)
+    res.status(500).send(err.message);
   }
 });
 
@@ -131,8 +131,8 @@ router.get("/getEPF", validateParam_getEPF, async (req, res) => {
       res.status(200).send(result);
     }
   } catch (err) {
-    console.log(err);
-    res.status(500).send("Server Error");
+    console.log("Server Error, Failed to get EPF: ", err)
+    res.status(500).send(err.message);
   }
 });
 
@@ -141,8 +141,8 @@ router.get("/getEPFs", async (req, res) => {
     const result = await getEPFs();
     res.status(200).send(result);
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Server Error");
+    console.log("Server Error, Failed to get all EPFs: ", err)
+    res.status(500).send(err.message);
   }
 });
 
@@ -244,8 +244,8 @@ router.put("/updateEPF", validateJSON_updateEPF, async (req, res) => {
       res.status(400).send("EPF not found or could not update");
     }
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Server Error");
+    console.log("Server Error, Failed to get update EPF: ", err)
+    res.status(500).send(err.message);
   }
 });
 
@@ -262,8 +262,8 @@ router.delete("/deleteEPF", validateParam_deleteEPF, async (req, res) => {
       res.status(404).send("EPF not found or could not delete");
     }
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Server Error");
+    console.log("Server Error, Failed to get delete EPF: ", err)
+    res.status(500).send(err.message);
   }
 });
 
