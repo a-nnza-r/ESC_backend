@@ -36,6 +36,7 @@ export async function createUser(
 
   try {
     await client.query("BEGIN");
+    await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
     const duplicateCheckQuery =
       "SELECT * FROM users WHERE user_id = $1 AND name = $2 AND email = $3 AND user_type = $4";
     const duplicateResult = await client.query(duplicateCheckQuery, [
@@ -66,11 +67,18 @@ export async function getUser(user_id, pool = defaultPool) {
     throw new Error("User ID must be provided");
   }
   const client = await pool.connect();
+
   try {
+    await client.query("BEGIN");
+    await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
     const query =
       "SELECT * FROM users WHERE user_id = $1 AND is_deleted = false";
     const result = await client.query(query, [user_id]);
+    await client.query("COMMIT");
     return result["rows"];
+  } catch (e) {
+    await client.query("ROLLBACK");
+    throw e;
   } finally {
     client.release();
   }
@@ -79,10 +87,16 @@ export async function getUser(user_id, pool = defaultPool) {
 export async function getUsers(pool = defaultPool) {
   const client = await pool.connect();
   try {
+    await client.query("BEGIN");
+    await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
     const result = await client.query(
       "SELECT * FROM users WHERE is_deleted = false;"
     );
+    await client.query("COMMIT");
     return result.rows;
+  } catch (e) {
+    await client.query("ROLLBACK");
+    throw e;
   } finally {
     client.release();
   }
@@ -127,13 +141,17 @@ export async function updateUser(
 
   const client = await pool.connect();
   try {
+    await client.query("BEGIN");
+    await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
     const response = await client.query(query, [name, email, type, user_id]);
     // Check if any row was affected
     if (response.rowCount == 0) {
       throw new Error("No record found with the given user_id.");
     }
+    await client.query("COMMIT");
     return response.rows[0]; // Return the updated record
   } finally {
+    await client.query("ROLLBACK");
     client.release();
   }
 }
@@ -146,6 +164,8 @@ export async function deleteUser(user_id, pool = defaultPool) {
   // Use try/catch/finally to ensure client is released even in case of error.
   const client = await pool.connect();
   try {
+    await client.query("BEGIN");
+    await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
     const query =
       "UPDATE users SET is_deleted = true WHERE user_id = $1 AND is_deleted = false RETURNING *;";
     const res = await client.query(query, [user_id]);
@@ -161,11 +181,12 @@ export async function deleteUser(user_id, pool = defaultPool) {
         throw new Error("User does not exist");
       }
     }
-
+    await client.query("COMMIT");
     return res.rows[0];
   } catch (err) {
     throw err;
   } finally {
+    await client.query("ROLLBACK");
     client.release();
   }
 }

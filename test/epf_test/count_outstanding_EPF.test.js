@@ -215,33 +215,42 @@ describe("count_outstanding_EPF", () => {
     );
 
     await update_outstanding_EPF_count(pool);
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
+      const result_EXCO_1 = await pool.query(
+        `SELECT outstanding_epf FROM users WHERE user_id='1'`
+      );
+      expect(result_EXCO_1["rows"][0]["outstanding_epf"]).toBe(0);
 
-    const result_EXCO_1 = await pool.query(
-      `SELECT outstanding_epf FROM users WHERE user_id='1'`
-    );
-    expect(result_EXCO_1["rows"][0]["outstanding_epf"]).toBe(0);
+      const result_EXCO_2 = await pool.query(
+        `SELECT outstanding_epf FROM users WHERE user_id='2'`
+      );
+      expect(result_EXCO_2["rows"][0]["outstanding_epf"]).toBe(0);
 
-    const result_EXCO_2 = await pool.query(
-      `SELECT outstanding_epf FROM users WHERE user_id='2'`
-    );
-    expect(result_EXCO_2["rows"][0]["outstanding_epf"]).toBe(0);
+      const result_OSL = await pool.query(
+        `SELECT outstanding_epf FROM users WHERE user_type='osl'`
+      );
+      const OSL_check = result_OSL.rows.every(
+        (row) => row["outstanding_epf"] === 0
+      );
 
-    const result_OSL = await pool.query(
-      `SELECT outstanding_epf FROM users WHERE user_type='osl'`
-    );
-    const OSL_check = result_OSL.rows.every(
-      (row) => row["outstanding_epf"] === 0
-    );
-
-    const result_ROOT = await pool.query(
-      `SELECT outstanding_epf FROM users WHERE user_type='root'`
-    );
-    const ROOT_check = result_ROOT.rows.every(
-      (row) => row["outstanding_epf"] === 0
-    );
-
-    expect(OSL_check).toBeTruthy();
-    expect(ROOT_check).toBeTruthy();
+      const result_ROOT = await pool.query(
+        `SELECT outstanding_epf FROM users WHERE user_type='root'`
+      );
+      const ROOT_check = result_ROOT.rows.every(
+        (row) => row["outstanding_epf"] === 0
+      );
+      await client.query("COMMIT");
+      expect(OSL_check).toBeTruthy();
+      expect(ROOT_check).toBeTruthy();
+    } catch (err) {
+      await client.query("ROLLBACK");
+      throw err;
+    } finally {
+      client.release();
+    }
   });
 
   test("Test ID: 2 - Cound update with pending form", async () => {
@@ -425,34 +434,47 @@ describe("count_outstanding_EPF", () => {
     );
 
     await update_outstanding_EPF_count(pool);
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
 
-    const result_EXCO_1 = await pool.query(
-      `SELECT outstanding_epf FROM users WHERE user_id='1'`
-    );
-    expect(result_EXCO_1["rows"][0]["outstanding_epf"]).toBe(0);
+      const result_EXCO_1 = await pool.query(
+        `SELECT outstanding_epf FROM users WHERE user_id='1'`
+      );
+      expect(result_EXCO_1["rows"][0]["outstanding_epf"]).toBe(0);
 
-    const result_EXCO_2 = await pool.query(
-      `SELECT outstanding_epf FROM users WHERE user_id='2'`
-    );
-    expect(result_EXCO_2["rows"][0]["outstanding_epf"]).toBe(1);
+      const result_EXCO_2 = await pool.query(
+        `SELECT outstanding_epf FROM users WHERE user_id='2'`
+      );
+      expect(result_EXCO_2["rows"][0]["outstanding_epf"]).toBe(1);
 
-    const result_OSL = await pool.query(
-      `SELECT outstanding_epf FROM users WHERE user_type='osl'`
-    );
-    const OSL_check = result_OSL.rows.every(
-      (row) => row["outstanding_epf"] === 1
-    );
+      const result_OSL = await pool.query(
+        `SELECT outstanding_epf FROM users WHERE user_type='osl'`
+      );
+      const OSL_check = result_OSL.rows.every(
+        (row) => row["outstanding_epf"] === 1
+      );
 
-    const result_ROOT = await pool.query(
-      `SELECT outstanding_epf FROM users WHERE user_type='root'`
-    );
-    const ROOT_check = result_ROOT.rows.every(
-      (row) => row["outstanding_epf"] === 1
-    );
+      const result_ROOT = await pool.query(
+        `SELECT outstanding_epf FROM users WHERE user_type='root'`
+      );
+      const ROOT_check = result_ROOT.rows.every(
+        (row) => row["outstanding_epf"] === 1
+      );
 
-    expect(OSL_check).toBeTruthy();
-    expect(ROOT_check).toBeTruthy();
+      expect(OSL_check).toBeTruthy();
+      expect(ROOT_check).toBeTruthy();
+
+      await client.query("COMMIT");
+    } catch (err) {
+      await client.query("ROLLBACK");
+      throw err;
+    } finally {
+      client.release();
+    }
   });
+
   afterAll(async () => {
     await deleteFromUsers(pool);
     await deleteFromEPFs(pool);

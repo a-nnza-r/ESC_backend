@@ -97,6 +97,7 @@ export async function update_outstanding_EPF_count(pool = defaultPool) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+    await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
     const exco_user_ids = await pool.query(
       `SELECT user_id FROM users WHERE user_type=$1`,
       ["exco"]
@@ -141,6 +142,7 @@ export async function get_outstanding_EPF_count(
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+    await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
     let result = await pool.query(
       `SELECT COUNT(*) FROM EPFS WHERE status != $1 AND exco_user_id=$2 AND is_deleted = false`,
       ["Approved", exco_user_id]
@@ -400,7 +402,7 @@ export async function createEPF(
 
   try {
     await client.query("BEGIN");
-
+    await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
     //Check for datatypes
     const datatypes = Object.values(epf_db_datatypes_create);
 
@@ -443,7 +445,7 @@ export async function getEPF(epf_id, pool = defaultPool) {
   let result = null;
   try {
     await client.query("BEGIN");
-
+    await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
     //Check for epf_id data type
     if (typeof epf_id !== "number") {
       throw new Error("Unexpected data type");
@@ -480,7 +482,8 @@ export async function getEPFs(pool = defaultPool) {
   let result = null;
   try {
     await client.query("BEGIN");
-    result = await pool.query(`SELECT * FROM EPFS WHERE is_deleted = false`);
+    await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
+    result = await client.query(`SELECT * FROM EPFS WHERE is_deleted = false`);
     await client.query("COMMIT");
   } catch (e) {
     await client.query("ROLLBACK");
@@ -678,7 +681,7 @@ export async function updateEPF(
 
   try {
     await client.query("BEGIN");
-
+    await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
     //Check for datatypes
     const datatypes = Object.values(epf_db_datatypes_update);
 
@@ -689,7 +692,7 @@ export async function updateEPF(
     }
 
     //Check for valid epf_id
-    const valid_epf_id = await pool.query(
+    const valid_epf_id = await client.query(
       `SELECT COUNT(*) FROM EPFS WHERE epf_id=$1`,
       [epf_id]
     );
@@ -698,7 +701,7 @@ export async function updateEPF(
     }
 
     //Check for valid exco_user_id
-    const valid_exco_user_id = await pool.query(
+    const valid_exco_user_id = await client.query(
       `SELECT COUNT(*) FROM users WHERE user_id=$1`,
       [exco_user_id]
     );
@@ -712,7 +715,7 @@ export async function updateEPF(
     }
 
     const query = `UPDATE EPFS SET (${columnNames}) = (${columnParams}) WHERE epf_id=$1 AND is_deleted = false RETURNING *`;
-    result = await pool.query(query, values);
+    result = await client.query(query, values);
     await client.query("COMMIT");
     return result.rows[0];
   } catch (e) {
@@ -728,14 +731,14 @@ export async function deleteEPF(epf_id, pool = defaultPool) {
   let result = null;
   try {
     await client.query("BEGIN");
-
+    await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
     //Check for epf_id data type
     if (typeof epf_id !== "number") {
       throw new Error("Unexpected data type");
     }
 
     //Check for valid epf_id
-    const valid_epf_id = await pool.query(
+    const valid_epf_id = await client.query(
       `SELECT COUNT(*) FROM EPFS WHERE epf_id=$1 AND is_deleted = false`,
       [epf_id]
     );
@@ -745,8 +748,8 @@ export async function deleteEPF(epf_id, pool = defaultPool) {
 
     const query =
       "UPDATE EPFS SET is_deleted = true WHERE epf_id = $1 AND is_deleted = false RETURNING epf_id";
-    result = await pool.query(query, [epf_id]);
-    await pool.query(
+    result = await client.query(query, [epf_id]);
+    await client.query(
       `UPDATE FILES SET is_deleted = true WHERE epf_id = $1 AND is_deleted = false`,
       [epf_id]
     );

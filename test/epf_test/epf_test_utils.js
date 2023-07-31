@@ -20,9 +20,13 @@ function createPool() {
 async function deleteFromUsers(pool) {
   const client = await pool.connect();
   try {
+    await client.query("BEGIN");
+    await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
     await client.query("TRUNCATE TABLE users RESTART IDENTITY CASCADE;");
+    await client.query("COMMIT");
   } catch (e) {
     console.error("Error on users truncate:", e.stack);
+    await client.query("ROLLBACK");
     throw e;
   } finally {
     client.release();
@@ -32,9 +36,13 @@ async function deleteFromUsers(pool) {
 async function deleteFromEPFs(pool) {
   const client = await pool.connect();
   try {
+    await client.query("BEGIN");
+    await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
     await client.query("TRUNCATE TABLE epfs RESTART IDENTITY CASCADE;");
+    await client.query("COMMIT");
   } catch (e) {
     console.error("Error on epfs truncate:", e.stack);
+    await client.query("ROLLBACK");
     throw e;
   } finally {
     client.release();

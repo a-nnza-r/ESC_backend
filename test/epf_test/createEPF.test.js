@@ -1678,54 +1678,68 @@ describe("createEPF", () => {
     const { result: result_EPF1, epf_count: epf_count_EPF1 } = createdEPFs[0];
     const { result: result_EPF2, epf_count: epf_count_EPF2 } = createdEPFs[1];
 
-    const result_records = await pool.query("SELECT COUNT(*) FROM EPFS;");
-    const recordCount = result_records.rows[0].count;
-    expect(recordCount).toBe("2");
+    let result_records = null;
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
+      result_records = await client.query("SELECT COUNT(*) FROM EPFS;");
 
-    if (result_EPF1["a_name"] == "user 1") {
-      let matches_1 = true;
-      for (let key in data_1) {
-        const originalKey = key.replace(/_1$/, "");
-        if (String(data_1[key]) !== String(result_EPF1[originalKey])) {
-          matches_1 = false;
-          break;
-        }
-      }
-      expect(result_EPF1).toHaveProperty("epf_id");
-      expect(matches_1).toBeTruthy();
+      await client.query("COMMIT");
 
-      let matches_2 = true;
-      for (let key in data_2) {
-        const originalKey = key.replace(/_2$/, "");
-        if (String(data_2[key]) !== String(result_EPF2[originalKey])) {
-          matches_2 = false;
-          break;
+      const recordCount = result_records.rows[0].count;
+      expect(recordCount).toBe("2");
+      if (result_EPF1["a_name"] == "user 1") {
+        let matches_1 = true;
+        for (let key in data_1) {
+          const originalKey = key.replace(/_1$/, "");
+          if (String(data_1[key]) !== String(result_EPF1[originalKey])) {
+            matches_1 = false;
+            break;
+          }
         }
-      }
-      expect(result_EPF2).toHaveProperty("epf_id");
-      expect(matches_2).toBeTruthy();
-    } else {
-      let matches_1 = true;
-      for (let key in data_1) {
-        const originalKey = key.replace(/_1$/, "");
-        if (String(data_1[key]) !== String(result_EPF2[originalKey])) {
-          matches_1 = false;
-          break;
-        }
-      }
-      expect(result_EPF2).toHaveProperty("epf_id");
-      expect(matches_1).toBeTruthy();
 
-      let matches_2 = true;
-      for (let key in data_2) {
-        const originalKey = key.replace(/_2$/, "");
-        if (String(data_2[key]) !== String(result_EPF1[originalKey])) {
-          matches_2 = false;
-          break;
+        expect(result_EPF1).toHaveProperty("epf_id");
+        expect(matches_1).toBeTruthy();
+
+        let matches_2 = true;
+        for (let key in data_2) {
+          const originalKey = key.replace(/_2$/, "");
+          if (String(data_2[key]) !== String(result_EPF2[originalKey])) {
+            matches_2 = false;
+            break;
+          }
         }
+        expect(result_EPF2).toHaveProperty("epf_id");
+        expect(matches_2).toBeTruthy();
+      } else {
+        let matches_1 = true;
+        for (let key in data_1) {
+          const originalKey = key.replace(/_1$/, "");
+          if (String(data_1[key]) !== String(result_EPF2[originalKey])) {
+            matches_1 = false;
+            break;
+          }
+        }
+        expect(result_EPF2).toHaveProperty("epf_id");
+        expect(matches_1).toBeTruthy();
+
+        let matches_2 = true;
+        for (let key in data_2) {
+          const originalKey = key.replace(/_2$/, "");
+          if (String(data_2[key]) !== String(result_EPF1[originalKey])) {
+            matches_2 = false;
+            break;
+          }
+        }
+        expect(result_EPF1).toHaveProperty("epf_id");
+        expect(matches_2).toBeTruthy();
       }
-      expect(result_EPF1).toHaveProperty("epf_id");
-      expect(matches_2).toBeTruthy();
+    } catch (err) {
+      await client.query("ROLLBACK");
+      throw err;
+    } finally {
+      client.release();
     }
   });
 
