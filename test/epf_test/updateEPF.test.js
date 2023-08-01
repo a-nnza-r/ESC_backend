@@ -759,7 +759,7 @@ describe("updateEPF", () => {
         g_comments_root,
         test_pool
       )
-    ).rejects.toThrow("Non-existent exco user id");
+    ).rejects.toThrow("Non-existent exco_user_id");
   });
 
   test("Test ID: 4 - Missing Event Name", async () => {

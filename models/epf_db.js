@@ -91,7 +91,7 @@ epf_db_datatypes_update = { epf_id: "number", ...epf_db_datatypes_create };
 export async function update_outstanding_EPF_count(client) {
   try {
     const exco_user_ids = await client.query(
-      `SELECT user_id FROM users WHERE user_type=$1`,
+      `SELECT user_id FROM users WHERE user_type=$1 FOR UPDATE`,
       ["exco"]
     );
 
@@ -388,116 +388,160 @@ export async function createEPF(
   let client;
   let result = null;
   let epf_count = null;
-  try {
-    client = await pool.connect();
-    await client.query("BEGIN");
-    await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
+  let retryCount = 5;
+  while (retryCount > 0) {
+    try {
+      client = await pool.connect();
+      await client.query("BEGIN");
+      await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
 
-    //Check for valid exco_user_id
-    const valid_exco_user_id = await client.query(
-      `SELECT COUNT(*) FROM users WHERE user_id=$1`,
-      [exco_user_id]
-    );
-    if (valid_exco_user_id.rows[0]["count"] == 0) {
-      throw new Error("Non-existent exco user id");
-    }
+      // Check for valid exco_user_id
+      const valid_exco_user_id = await client.query(
+        `SELECT COUNT(*) FROM users WHERE user_id=$1`,
+        [exco_user_id]
+      );
+      if (valid_exco_user_id.rows[0]["count"] == 0) {
+        throw new Error("Non-existent exco user id");
+      }
 
-    const query = `INSERT INTO EPFS(${column_names}) VALUES (${columnParams}) RETURNING *`;
-    result = await client.query(query, values);
+      const query = `INSERT INTO EPFS(${column_names}) VALUES (${columnParams}) RETURNING *`;
+      result = await client.query(query, values);
 
-    epf_count = await get_outstanding_EPF_count(exco_user_id, client);
-    await update_outstanding_EPF_count(client);
-    await client.query("COMMIT");
-    return { result: result["rows"][0], epf_count: epf_count };
-  } catch (err) {
-    if (err.message === "Non-existent exco user id") {
+      epf_count = await get_outstanding_EPF_count(exco_user_id, client);
+      await update_outstanding_EPF_count(client);
       await client.query("COMMIT");
-      throw err;
-    } else {
-      if (client) {
-        await client.query("ROLLBACK");
+      return { result: result["rows"][0], epf_count: epf_count };
+    } catch (err) {
+      if (err.message === "Non-existent exco user id") {
+        await client.query("COMMIT");
         throw err;
-      } else new Error("couldnt acquire client");
+      } else {
+        if (client) {
+          await client.query("ROLLBACK");
+          if (
+            err.code === "40001" ||
+            err.message.includes("deadlock detected")
+          ) {
+            // 40001 is the error code for serialization failure
+            retryCount -= 1;
+          } else {
+            throw err;
+          }
+        } else new Error("couldnt acquire client");
+      }
+    } finally {
+      if (client) {
+        client.release();
+      }
     }
-  } finally {
-    if (client) {
-      client.release();
-    }
+  }
+  if (retryCount <= 0) {
+    throw new Error(
+      "Transaction failed due to serialization error or deadlock after 5 retries"
+    );
   }
 }
 
 export async function getEPF(epf_id, pool = db_pool) {
-  //Check for epf_id data type
+  // Check for epf_id data type
   if (typeof epf_id !== "number") {
     throw new Error("Unexpected data type");
   }
+
+  const MAX_RETRIES = 5;
   let client;
   let result = null;
-  try {
-    client = await pool.connect();
-    await client.query("BEGIN");
-    await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
 
-    //Check for valid epf_id
-    const valid_epf_id = await client.query(
-      `SELECT COUNT(*) FROM EPFS WHERE epf_id = $1 AND is_deleted = false`,
-      [epf_id]
-    );
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      client = await pool.connect();
+      await client.query("BEGIN");
+      await client.query("SET TRANSACTION ISOLATION LEVEL READ COMMITTED");
 
-    if (valid_epf_id.rows[0]["count"] == 0) {
-      throw new Error("Non-existent epf");
-    }
+      // Check for valid epf_id
+      const valid_epf_id = await client.query(
+        `SELECT COUNT(*) FROM EPFS WHERE epf_id = $1 AND is_deleted = false`,
+        [epf_id]
+      );
 
-    result = await client.query(
-      "SELECT * FROM EPFS WHERE epf_id = $1 AND is_deleted = false",
-      [epf_id]
-    );
-    await client.query("COMMIT");
-    if (result["rows"].length === 0) {
-      return null;
-    }
-    return result["rows"];
-  } catch (err) {
-    if (err.message === "Non-existent epf") {
+      if (valid_epf_id.rows[0]["count"] == 0) {
+        throw new Error("Non-existent epf");
+      }
+
+      result = await client.query(
+        "SELECT * FROM EPFS WHERE epf_id = $1 AND is_deleted = false",
+        [epf_id]
+      );
+
       await client.query("COMMIT");
-      throw err;
-    } else {
+      break; // Break the retry loop upon successful transaction
+    } catch (err) {
       if (client) {
         await client.query("ROLLBACK");
+      }
+      if (
+        !err.message.includes("could not serialize access") &&
+        !err.message.includes("deadlock detected")
+      ) {
         throw err;
-      } else new Error("couldnt acquire client");
-    }
-  } finally {
-    if (client) {
-      client.release();
+      }
+      if (attempt === MAX_RETRIES - 1) {
+        throw new Error("Max retrieval attempts exceeded");
+      }
+    } finally {
+      if (client) {
+        client.release();
+      }
     }
   }
+
+  if (result["rows"].length === 0) {
+    return null;
+  }
+  return result["rows"];
 }
 
 export async function getEPFs(pool = db_pool) {
+  const MAX_RETRIES = 5;
   let client;
   let result = null;
 
-  try {
-    client = await pool.connect();
-    await client.query("BEGIN");
-    await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
-    result = await client.query(`SELECT * FROM EPFS WHERE is_deleted = false`);
-    await client.query("COMMIT");
-  } catch (err) {
-    if (client) {
-      await client.query("ROLLBACK");
-      throw err;
-    } else new Error("couldnt acquire client");
-  } finally {
-    if (client) {
-      client.release();
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      client = await pool.connect();
+      await client.query("BEGIN");
+      await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
+      result = await client.query(
+        `SELECT * FROM EPFS WHERE is_deleted = false`
+      );
+      await client.query("COMMIT");
+      break;
+    } catch (err) {
+      if (client) {
+        await client.query("ROLLBACK");
+      }
+      if (
+        (err.message.includes(
+          "could not serialize access due to read/write dependencies among transactions"
+        ) ||
+          err.message.includes("deadlock detected")) &&
+        attempt < MAX_RETRIES - 1
+      ) {
+        continue;
+      } else {
+        throw err;
+      }
+    } finally {
+      if (client) {
+        client.release();
+      }
     }
-    if (result["rows"].length === 0) {
-      return null;
-    }
-    return result["rows"];
   }
+
+  if (result["rows"].length === 0) {
+    return null;
+  }
+  return result["rows"];
 }
 
 export async function updateEPF(
@@ -695,100 +739,111 @@ export async function updateEPF(
 
   let client;
   let result = null;
-  try {
-    client = await pool.connect();
-    await client.query("BEGIN");
-    await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
+  const MAX_RETRIES = 5;
 
-    //Check for valid epf_id
-    const valid_epf_id = await client.query(
-      `SELECT COUNT(*) FROM EPFS WHERE epf_id=$1`,
-      [epf_id]
-    );
-    if (valid_epf_id.rows[0]["count"] == 0) {
-      throw new Error("Non-existent epf");
-    }
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      client = await pool.connect();
+      await client.query("BEGIN");
+      await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
 
-    //Check for valid exco_user_id
-    const valid_exco_user_id = await client.query(
-      `SELECT COUNT(*) FROM users WHERE user_id=$1`,
-      [exco_user_id]
-    );
-    if (valid_exco_user_id.rows[0]["count"] == 0) {
-      throw new Error("Non-existent exco user id");
-    }
+      // Check for valid epf_id and exco_user_id
+      const idsToCheck = {
+        epf_id: ["EPFS", "epf_id", epf_id],
+        exco_user_id: ["users", "user_id", exco_user_id],
+      };
 
-    const query = `UPDATE EPFS SET (${columnNames}) = (${columnParams}) WHERE epf_id=$1 AND is_deleted = false RETURNING *`;
-    result = await client.query(query, values);
-    await update_outstanding_EPF_count(client);
-    await client.query("COMMIT");
-    return result.rows[0];
-  } catch (err) {
-    if (
-      err.message === "Non-existent exco user id" ||
-      err.message === "Non-existent epf"
-    ) {
+      for (let id in idsToCheck) {
+        const res = await client.query(
+          `SELECT COUNT(*) FROM ${idsToCheck[id][0]} WHERE ${idsToCheck[id][1]}=$1`,
+          [idsToCheck[id][2]]
+        );
+        if (res.rows[0]["count"] == 0) {
+          throw new Error(`Non-existent ${id}`);
+        }
+      }
+      const query = `UPDATE EPFS SET (${columnNames}) = (${columnParams}) WHERE epf_id=$1 AND is_deleted = false RETURNING *`;
+      result = await client.query(query, values);
+      await update_outstanding_EPF_count(client);
       await client.query("COMMIT");
-      throw err;
-    } else {
+      break;
+    } catch (err) {
       if (client) {
         await client.query("ROLLBACK");
+      }
+      if (
+        !(
+          err.message.includes("could not serialize access") ||
+          err.message.includes("deadlock detected")
+        )
+      ) {
         throw err;
-      } else new Error("couldnt acquire client");
-    }
-  } finally {
-    if (client) {
-      client.release();
+      }
+      if (attempt === MAX_RETRIES - 1) {
+        throw new Error("Max update attempts exceeded");
+      }
+    } finally {
+      if (client) {
+        client.release();
+      }
     }
   }
+  return result.rows[0];
 }
 
 export async function deleteEPF(epf_id, pool = db_pool) {
-  //Check for epf_id data type
+  // Check for epf_id data type
   if (typeof epf_id !== "number") {
     throw new Error("Unexpected data type");
   }
 
+  const MAX_RETRIES = 5;
   let client;
   let result = null;
-  try {
-    client = await pool.connect();
-    await client.query("BEGIN");
-    await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
 
-    //Check for valid epf_id
-    const valid_epf_id = await client.query(
-      `SELECT COUNT(*) FROM EPFS WHERE epf_id=$1 AND is_deleted = false`,
-      [epf_id]
-    );
-    if (valid_epf_id.rows[0]["count"] == 0) {
-      throw new Error("Non-existent epf");
-    }
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      client = await pool.connect();
+      await client.query("BEGIN");
+      await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
 
-    const query =
-      "UPDATE EPFS SET is_deleted = true WHERE epf_id = $1 AND is_deleted = false RETURNING epf_id";
-    result = await client.query(query, [epf_id]);
-    await client.query(
-      `UPDATE FILES SET is_deleted = true WHERE epf_id = $1 AND is_deleted = false`,
-      [epf_id]
-    );
-    await update_outstanding_EPF_count(client);
-    await client.query("COMMIT");
-    //Returns {"epf_id": value}
-    return result.rows[0];
-  } catch (err) {
-    if (err.message === "Non-existent epf") {
+      // Check for valid epf_id
+      const valid_epf_id = await client.query(
+        `SELECT COUNT(*) FROM EPFS WHERE epf_id=$1 AND is_deleted = false`,
+        [epf_id]
+      );
+      if (valid_epf_id.rows[0]["count"] == 0) {
+        throw new Error("Non-existent epf");
+      }
+
+      const query =
+        "UPDATE EPFS SET is_deleted = true WHERE epf_id = $1 AND is_deleted = false RETURNING epf_id";
+      result = await client.query(query, [epf_id]);
+      await client.query(
+        `UPDATE FILES SET is_deleted = true WHERE epf_id = $1 AND is_deleted = false`,
+        [epf_id]
+      );
+      await update_outstanding_EPF_count(client);
       await client.query("COMMIT");
-      throw err;
-    } else {
+      break; // Breaks the loop if the transaction is successful
+    } catch (err) {
       if (client) {
         await client.query("ROLLBACK");
+      }
+      if (
+        !err.message.includes("could not serialize access") &&
+        !err.message.includes("deadlock detected")
+      ) {
         throw err;
-      } else new Error("couldnt acquire client");
-    }
-  } finally {
-    if (client) {
-      client.release();
+      }
+      if (attempt === MAX_RETRIES - 1) {
+        throw new Error("Max delete attempts exceeded");
+      }
+    } finally {
+      if (client) {
+        client.release();
+      }
     }
   }
+  return result.rows[0];
 }

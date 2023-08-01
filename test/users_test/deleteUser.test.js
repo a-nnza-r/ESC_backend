@@ -49,7 +49,7 @@ describe("deleteUser", () => {
     );
     await deleteUser(createdUser.user_id, test_pool);
     await expect(deleteUser(createdUser.user_id, test_pool)).rejects.toThrow(
-      "User has already been deleted"
+      "User does not exist or has already been deleted."
     );
   });
 
