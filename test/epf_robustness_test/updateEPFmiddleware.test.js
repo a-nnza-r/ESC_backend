@@ -6,6 +6,7 @@ import {
   } from "../../middleware/validationMiddleware.js";
 import path from "path";
 import fs from "fs";
+import { randomBytes } from "crypto";
 
 const jsonFilePath = path.join(__dirname, 'updateEPF_testjson', 'updateEPF_test1.json');
 const jsonData = fs.readFileSync(jsonFilePath, 'utf-8');
@@ -53,7 +54,8 @@ describe('Robustness/Fuzzy testing of updateEPF API', () => {
   });
 
   test('Test ID 3: Return 400 error when payload is invalid', () => {
-    const req = mockRequest("random");
+    const randomBytesData = randomBytes(100);
+    const req = mockRequest(randomBytesData);
     const res = mockResponse();
     const next = jest.fn();
 

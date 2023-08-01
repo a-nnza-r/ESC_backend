@@ -5,6 +5,8 @@ import {
     validateParam_deleteEPF 
   } from "../../middleware/validationMiddleware.js";
 
+import { randomBytes } from "crypto";
+
 // Mock Express request and response objects
 const mockRequest = (query) => ({ query });
 const mockResponse = () => {
@@ -35,6 +37,19 @@ describe('Robustness/Fuzzy testing of deleteEPF API', () => {
     const req = mockRequest({
       // "epf_id" key is missing
     });
+    const res = mockResponse();
+    const next = jest.fn();
+
+    validateParam_deleteEPF(req, res, next);
+
+    expect(next).not.toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Missing epf_id key for delete EPF query' });
+  });
+
+  test('Test ID 3: Return 400 error when request query is invalid', () => {
+    const randomBytesData = randomBytes(100);
+    const req = mockRequest(randomBytesData);
     const res = mockResponse();
     const next = jest.fn();
 
