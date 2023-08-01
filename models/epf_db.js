@@ -389,6 +389,7 @@ export async function createEPF(
   let result = null;
   let epf_count = null;
   let retryCount = 5;
+  const RETRY_DELAY_MS = 200;
   while (retryCount > 0) {
     try {
       client = await pool.connect();
@@ -424,6 +425,7 @@ export async function createEPF(
           ) {
             // 40001 is the error code for serialization failure
             retryCount -= 1;
+            await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
           } else {
             throw err;
           }
@@ -488,6 +490,7 @@ export async function getEPF(epf_id, pool = db_pool) {
       if (attempt === MAX_RETRIES - 1) {
         throw new Error("Max retrieval attempts exceeded");
       }
+      await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
     } finally {
       if (client) {
         client.release();
@@ -531,6 +534,7 @@ export async function getEPFs(pool = db_pool) {
       } else {
         throw err;
       }
+      await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
     } finally {
       if (client) {
         client.release();
