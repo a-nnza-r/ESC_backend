@@ -6,11 +6,11 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const credentials = {
-  host: process.env.HOST,
-  user: process.env.USER,
-  port: process.env.PORT,
-  password: process.env.PASSWORD,
-  database: process.env.DATABASE,
+  host: "database-3.cpb6hjfazsgd.ap-southeast-1.rds.amazonaws.com",
+  user: "postgres",
+  port: "5432",
+  password: "12345678",
+  database: "esc_db_test",
 };
 
 export const createPool = () => new Pool(credentials);
