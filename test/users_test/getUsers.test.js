@@ -1,19 +1,13 @@
-const { getUsers, createUser, deleteUser } = require("../../models/user_db");
-const {
-  createPool,
+import { getUsers, createUser, deleteUser } from "../../models/user_db";
+import {
+  test_pool,
   deleteFromTables,
   expectUserToMatch,
-} = require("./exco_test_utils");
-
-let pool;
+} from "./exco_test_utils";
 
 describe("getUsers", () => {
-  beforeAll(async () => {
-    pool = await createPool();
-  });
-
   beforeEach(async () => {
-    await deleteFromTables(pool);
+    await deleteFromTables(test_pool);
   });
 
   test("Test ID: 1 - Retrieve all active Users from the table", async () => {
@@ -35,17 +29,17 @@ describe("getUsers", () => {
       userData1.name,
       userData1.email,
       userData1.type,
-      pool
+      test_pool
     );
     const user2 = await createUser(
       userData2.userID,
       userData2.name,
       userData2.email,
       userData2.type,
-      pool
+      test_pool
     );
 
-    const result = await getUsers(pool);
+    const result = await getUsers(test_pool);
 
     const received = [...result].sort((a, b) => a.name.localeCompare(b.name));
     const expected = [user1, user2].sort((a, b) =>
@@ -63,7 +57,7 @@ describe("getUsers", () => {
   });
 
   test("Test ID: 2 - Empty table: No Users in the table", async () => {
-    const result = await getUsers(pool);
+    const result = await getUsers(test_pool);
     expect(result).toEqual([]);
   });
 
@@ -86,18 +80,18 @@ describe("getUsers", () => {
       userData1.name,
       userData1.email,
       userData1.type,
-      pool
+      test_pool
     );
     const user2 = await createUser(
       userData2.userID,
       userData2.name,
       userData2.email,
       userData2.type,
-      pool
+      test_pool
     );
-    await deleteUser(user2.user_id, pool);
+    await deleteUser(user2.user_id, test_pool);
 
-    const result = await getUsers(pool);
+    const result = await getUsers(test_pool);
 
     expect(result).toHaveLength(1);
     expectUserToMatch(result[0], {
@@ -109,7 +103,6 @@ describe("getUsers", () => {
   });
 
   afterAll(async () => {
-    await deleteFromTables(pool);
-    await pool.end();
+    await deleteFromTables(test_pool);
   });
 });

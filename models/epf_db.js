@@ -1,7 +1,4 @@
-const { Mutex } = require("async-mutex");
-import { createPool } from "./db_utils.js";
-const defaultPool = createPool();
-const epfDBmutex = new Mutex();
+import { db_pool } from "./db_utils.js";
 
 const epf_db_datatypes_create = {
   status: "string",
@@ -120,8 +117,8 @@ export async function update_outstanding_EPF_count(client) {
       `UPDATE users SET outstanding_epf=$1 WHERE user_type!=$2`,
       [total_count["rows"][0]["count"], "exco"]
     );
-  } catch (e) {
-    throw e;
+  } catch (err) {
+    throw err;
   }
 }
 
@@ -132,8 +129,8 @@ export async function get_outstanding_EPF_count(exco_user_id, client) {
       ["Approved", exco_user_id]
     );
     return result.rows[0]["count"];
-  } catch (e) {
-    throw e;
+  } catch (err) {
+    throw err;
   }
 }
 
@@ -220,7 +217,7 @@ export async function createEPF(
   G_7_3,
   G_comments_OSL,
   G_comments_ROOT,
-  pool = defaultPool
+  pool = db_pool
 ) {
   const columnParams = new Array(82)
     .fill()
@@ -376,22 +373,25 @@ export async function createEPF(
     sectionG7
   );
 
-  const client = await pool.connect();
+  const datatypes = Object.values(epf_db_datatypes_create);
+
+  for (let i = 0; i < values.length; i++) {
+    if (typeof values[i] !== datatypes[i]) {
+      throw new Error("Unexpected data type");
+    }
+  }
+  //Check for event name
+  if (B_event_name.trim().length == 0) {
+    throw new Error("Event name missing");
+  }
+
+  let client;
   let result = null;
   let epf_count = null;
-
   try {
-    await epfDBmutex.acquire();
+    client = await pool.connect();
     await client.query("BEGIN");
     await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
-    //Check for datatypes
-    const datatypes = Object.values(epf_db_datatypes_create);
-
-    for (let i = 0; i < values.length; i++) {
-      if (typeof values[i] !== datatypes[i]) {
-        throw new Error("Unexpected data type");
-      }
-    }
 
     //Check for valid exco_user_id
     const valid_exco_user_id = await client.query(
@@ -402,10 +402,6 @@ export async function createEPF(
       throw new Error("Non-existent exco user id");
     }
 
-    //Check for event name
-    if (B_event_name.trim().length == 0) {
-      throw new Error("Event name missing");
-    }
     const query = `INSERT INTO EPFS(${column_names}) VALUES (${columnParams}) RETURNING *`;
     result = await client.query(query, values);
 
@@ -413,32 +409,41 @@ export async function createEPF(
     await update_outstanding_EPF_count(client);
     await client.query("COMMIT");
     return { result: result["rows"][0], epf_count: epf_count };
-  } catch (e) {
-    await client.query("ROLLBACK");
-    throw e;
+  } catch (err) {
+    if (err.message === "Non-existent exco user id") {
+      await client.query("COMMIT");
+      throw err;
+    } else {
+      if (client) {
+        await client.query("ROLLBACK");
+        throw err;
+      } else new Error("couldnt acquire client");
+    }
   } finally {
-    client.release();
-    epfDBmutex.release();
+    if (client) {
+      client.release();
+    }
   }
 }
 
-export async function getEPF(epf_id, pool = defaultPool) {
-  const client = await pool.connect();
+export async function getEPF(epf_id, pool = db_pool) {
+  //Check for epf_id data type
+  if (typeof epf_id !== "number") {
+    throw new Error("Unexpected data type");
+  }
+  let client;
   let result = null;
   try {
-    await epfDBmutex.acquire();
+    client = await pool.connect();
     await client.query("BEGIN");
     await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
-    //Check for epf_id data type
-    if (typeof epf_id !== "number") {
-      throw new Error("Unexpected data type");
-    }
 
     //Check for valid epf_id
     const valid_epf_id = await client.query(
       `SELECT COUNT(*) FROM EPFS WHERE epf_id = $1 AND is_deleted = false`,
       [epf_id]
     );
+
     if (valid_epf_id.rows[0]["count"] == 0) {
       throw new Error("Non-existent epf");
     }
@@ -452,30 +457,42 @@ export async function getEPF(epf_id, pool = defaultPool) {
       return null;
     }
     return result["rows"];
-  } catch (e) {
-    await client.query("ROLLBACK");
-    throw e;
+  } catch (err) {
+    if (err.message === "Non-existent epf") {
+      await client.query("COMMIT");
+      throw err;
+    } else {
+      if (client) {
+        await client.query("ROLLBACK");
+        throw err;
+      } else new Error("couldnt acquire client");
+    }
   } finally {
-    client.release();
-    epfDBmutex.release();
+    if (client) {
+      client.release();
+    }
   }
 }
 
-export async function getEPFs(pool = defaultPool) {
-  const client = await pool.connect();
+export async function getEPFs(pool = db_pool) {
+  let client;
   let result = null;
+
   try {
-    await epfDBmutex.acquire();
+    client = await pool.connect();
     await client.query("BEGIN");
     await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
     result = await client.query(`SELECT * FROM EPFS WHERE is_deleted = false`);
     await client.query("COMMIT");
-  } catch (e) {
-    await client.query("ROLLBACK");
-    throw e;
+  } catch (err) {
+    if (client) {
+      await client.query("ROLLBACK");
+      throw err;
+    } else new Error("couldnt acquire client");
   } finally {
-    client.release();
-    epfDBmutex.release();
+    if (client) {
+      client.release();
+    }
     if (result["rows"].length === 0) {
       return null;
     }
@@ -568,7 +585,7 @@ export async function updateEPF(
   G_comments_OSL,
   G_comments_ROOT,
 
-  pool = defaultPool
+  pool = db_pool
 ) {
   const columnNames =
     "status,exco_user_id,a_name,a_student_id,a_organisation,a_contact_number,a_email,a_comments_osl,a_comments_root,b_event_name,b_target_audience,b_event_schedule,b_expected_turnout,b_event_objective,b_comments_osl,b_comments_root,c1_date,c1_time,c1_activity_and_description,c1_venue,c2_date,c2_time,c2_activity_and_description,c2_venue,c3_date,c3_time,c3_activity_and_description,c3_venue,c3_cleanup_date,c3_cleanup_time,c3_cleanup_activity_and_description,c3_cleanup_venue,c_comments_osl,c_comments_root,d1a_club_income_fund,d1a_osl_seed_fund,d1a_donation,d1b_revenue,d1b_donation_or_scholarship,d1b_total_source_of_funds,d11_items_goods_services,d11_price,d11_quantity,d11_amount,d11_total_revenue,d2_items,d2_reason_for_purchase,d2_venue,d2_total_expenditure,d_comments_osl,d_comments_root,e_personal_data,e_comments_osl,e_comments_root,f_name,f_student_id,f_position,f_comments_osl,f_comments_root,g_1_1,g_1_2,g_1_3,g_2_1,g_2_2,g_2_3,g_3_1,g_3_2,g_3_3,g_4_1,g_4_2,g_4_3,g_5_1,g_5_2,g_5_3,g_6_1,g_6_2,g_6_3,g_7_1,g_7_2,g_7_3,g_comments_osl,g_comments_root";
@@ -662,21 +679,26 @@ export async function updateEPF(
     G_comments_ROOT,
   ];
 
-  const client = await pool.connect();
-  let result = null;
+  //Check for datatypes
+  const datatypes = Object.values(epf_db_datatypes_update);
 
+  for (let i = 0; i < values.length; i++) {
+    if (typeof values[i] !== datatypes[i]) {
+      throw new Error("Unexpected data type");
+    }
+  }
+
+  //Check for event name
+  if (B_event_name.trim().length == 0) {
+    throw new Error("Event name missing");
+  }
+
+  let client;
+  let result = null;
   try {
-    await epfDBmutex.acquire();
+    client = await pool.connect();
     await client.query("BEGIN");
     await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
-    //Check for datatypes
-    const datatypes = Object.values(epf_db_datatypes_update);
-
-    for (let i = 0; i < values.length; i++) {
-      if (typeof values[i] !== datatypes[i]) {
-        throw new Error("Unexpected data type");
-      }
-    }
 
     //Check for valid epf_id
     const valid_epf_id = await client.query(
@@ -696,36 +718,43 @@ export async function updateEPF(
       throw new Error("Non-existent exco user id");
     }
 
-    //Check for event name
-    if (B_event_name.trim().length == 0) {
-      throw new Error("Event name missing");
-    }
-
     const query = `UPDATE EPFS SET (${columnNames}) = (${columnParams}) WHERE epf_id=$1 AND is_deleted = false RETURNING *`;
     result = await client.query(query, values);
     await update_outstanding_EPF_count(client);
     await client.query("COMMIT");
     return result.rows[0];
-  } catch (e) {
-    await client.query("ROLLBACK");
-    throw e;
+  } catch (err) {
+    if (
+      err.message === "Non-existent exco user id" ||
+      err.message === "Non-existent epf"
+    ) {
+      await client.query("COMMIT");
+      throw err;
+    } else {
+      if (client) {
+        await client.query("ROLLBACK");
+        throw err;
+      } else new Error("couldnt acquire client");
+    }
   } finally {
-    client.release();
-    epfDBmutex.release();
+    if (client) {
+      client.release();
+    }
   }
 }
 
-export async function deleteEPF(epf_id, pool = defaultPool) {
-  const client = await pool.connect();
+export async function deleteEPF(epf_id, pool = db_pool) {
+  //Check for epf_id data type
+  if (typeof epf_id !== "number") {
+    throw new Error("Unexpected data type");
+  }
+
+  let client;
   let result = null;
   try {
-    await epfDBmutex.acquire();
+    client = await pool.connect();
     await client.query("BEGIN");
     await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
-    //Check for epf_id data type
-    if (typeof epf_id !== "number") {
-      throw new Error("Unexpected data type");
-    }
 
     //Check for valid epf_id
     const valid_epf_id = await client.query(
@@ -747,11 +776,19 @@ export async function deleteEPF(epf_id, pool = defaultPool) {
     await client.query("COMMIT");
     //Returns {"epf_id": value}
     return result.rows[0];
-  } catch (e) {
-    await client.query("ROLLBACK");
-    throw e;
+  } catch (err) {
+    if (err.message === "Non-existent epf") {
+      await client.query("COMMIT");
+      throw err;
+    } else {
+      if (client) {
+        await client.query("ROLLBACK");
+        throw err;
+      } else new Error("couldnt acquire client");
+    }
   } finally {
-    client.release();
-    epfDBmutex.release();
+    if (client) {
+      client.release();
+    }
   }
 }

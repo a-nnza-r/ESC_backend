@@ -1,19 +1,13 @@
-const { createUser } = require("../../models/user_db");
-const {
-  createPool,
+import { createUser } from "../../models/user_db";
+import {
+  test_pool,
   deleteFromTables,
   expectUserToMatch,
-} = require("./exco_test_utils");
-
-let pool;
+} from "./exco_test_utils";
 
 describe("createUser", () => {
-  beforeAll(async () => {
-    pool = await createPool();
-  });
-
   beforeEach(async () => {
-    await deleteFromTables(pool);
+    await deleteFromTables(test_pool);
   });
 
   // Correct input cases
@@ -22,7 +16,7 @@ describe("createUser", () => {
     const name = "Root User";
     const email = "root_user@example.com";
     const type = "root";
-    const createdUser = await createUser(user_id, name, email, type, pool);
+    const createdUser = await createUser(user_id, name, email, type, test_pool);
     expectUserToMatch(createdUser, { user_id, name, email, user_type: type });
   });
 
@@ -31,7 +25,7 @@ describe("createUser", () => {
     const name = "OSL User";
     const email = "osl_user@example.com";
     const type = "osl";
-    const createdUser = await createUser(user_id, name, email, type, pool);
+    const createdUser = await createUser(user_id, name, email, type, test_pool);
     expectUserToMatch(createdUser, { user_id, name, email, user_type: type });
   });
 
@@ -40,7 +34,7 @@ describe("createUser", () => {
     const name = "EXCO User";
     const email = "exco_user@example.com";
     const type = "exco";
-    const createdUser = await createUser(user_id, name, email, type, pool);
+    const createdUser = await createUser(user_id, name, email, type, test_pool);
     expectUserToMatch(createdUser, { user_id, name, email, user_type: type });
   });
 
@@ -50,9 +44,9 @@ describe("createUser", () => {
     const name = "";
     const email = "test@example.com";
     const type = "exco";
-    await expect(createUser(user_id, name, email, type, pool)).rejects.toThrow(
-      "Name must be provided"
-    );
+    await expect(
+      createUser(user_id, name, email, type, test_pool)
+    ).rejects.toThrow("Name must be provided");
   });
 
   test("Test ID: 2.2 - Missing email: Attempt to create user without providing an email", async () => {
@@ -60,9 +54,9 @@ describe("createUser", () => {
     const name = "User";
     const email = "";
     const type = "exco";
-    await expect(createUser(user_id, name, email, type, pool)).rejects.toThrow(
-      "Invalid email format"
-    );
+    await expect(
+      createUser(user_id, name, email, type, test_pool)
+    ).rejects.toThrow("Invalid email format");
   });
 
   test("Test ID: 2.3 - Invalid email format: Attempt to create user with an incorrect email format", async () => {
@@ -70,9 +64,9 @@ describe("createUser", () => {
     const name = "User";
     const email = "invalid_email";
     const type = "exco";
-    await expect(createUser(user_id, name, email, type, pool)).rejects.toThrow(
-      "Invalid email format"
-    );
+    await expect(
+      createUser(user_id, name, email, type, test_pool)
+    ).rejects.toThrow("Invalid email format");
   });
 
   test("Test ID: 2.4 - Missing user_id: Attempt to create user without providing an id", async () => {
@@ -80,9 +74,9 @@ describe("createUser", () => {
     const name = "User";
     const email = "user@example.com";
     const type = "exco";
-    await expect(createUser(user_id, name, email, type, pool)).rejects.toThrow(
-      "User ID must be provided"
-    );
+    await expect(
+      createUser(user_id, name, email, type, test_pool)
+    ).rejects.toThrow("User ID must be provided");
   });
 
   test("Test ID: 2.5 - Invalid user_type: Attempt to create user with an invalid type", async () => {
@@ -90,9 +84,9 @@ describe("createUser", () => {
     const name = "User";
     const email = "user@example.com";
     const type = "invalid";
-    await expect(createUser(user_id, name, email, type, pool)).rejects.toThrow(
-      "Invalid user type. Must be 'root', 'osl', or 'exco'"
-    );
+    await expect(
+      createUser(user_id, name, email, type, test_pool)
+    ).rejects.toThrow("Invalid user type. Must be 'root', 'osl', or 'exco'");
   });
 
   // Special cases
@@ -101,16 +95,22 @@ describe("createUser", () => {
     const name = "User";
     const email = "user@example.com";
     const type = "exco";
-    const firstCreatedUser = await createUser(user_id, name, email, type, pool);
+    const firstCreatedUser = await createUser(
+      user_id,
+      name,
+      email,
+      type,
+      test_pool
+    );
     expectUserToMatch(firstCreatedUser, {
       user_id,
       name,
       email,
       user_type: type,
     });
-    await expect(createUser(user_id, name, email, type, pool)).rejects.toThrow(
-      "Duplicate entry"
-    );
+    await expect(
+      createUser(user_id, name, email, type, test_pool)
+    ).rejects.toThrow("Duplicate entry");
   });
 
   test("Test ID: 3.2 - Duplicate entry: Attempt to create user with an existing id, name, email, and type combination", async () => {
@@ -120,7 +120,13 @@ describe("createUser", () => {
     const type = "exco";
 
     // Create first user
-    const firstCreatedUser = await createUser(user_id, name, email, type, pool);
+    const firstCreatedUser = await createUser(
+      user_id,
+      name,
+      email,
+      type,
+      test_pool
+    );
     expectUserToMatch(firstCreatedUser, {
       user_id: user_id,
       name: name,
@@ -129,13 +135,12 @@ describe("createUser", () => {
     });
 
     // Attempt to create second user with same id, name, email, and type
-    await expect(createUser(user_id, name, email, type, pool)).rejects.toThrow(
-      "Duplicate entry"
-    );
+    await expect(
+      createUser(user_id, name, email, type, test_pool)
+    ).rejects.toThrow("Duplicate entry");
   });
 
   afterAll(async () => {
-    await deleteFromTables(pool);
-    await pool.end();
+    await deleteFromTables(test_pool);
   });
 });

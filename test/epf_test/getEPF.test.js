@@ -1,10 +1,6 @@
 import { createEPF, getEPF } from "../../models/epf_db.js";
 import { createUser } from "../../models/user_db.js";
-import {
-  createPool,
-  deleteFromUsers,
-  deleteFromEPFs,
-} from "./epf_test_utils.js";
+import { test_pool, deleteFromUsers, deleteFromEPFs } from "./epf_test_utils";
 
 import path from "path";
 import fs from "fs";
@@ -13,13 +9,18 @@ let pool;
 
 describe("getEPF", () => {
   beforeAll(async () => {
-    pool = createPool();
-    await deleteFromUsers(pool);
-    await createUser("1", "name 1", "name_1@mymail.sutd.edu.sg", "exco", pool);
+    await deleteFromUsers(test_pool);
+    await createUser(
+      "1",
+      "name 1",
+      "name_1@mymail.sutd.edu.sg",
+      "exco",
+      test_pool
+    );
   });
 
   beforeEach(async () => {
-    await deleteFromEPFs(pool);
+    await deleteFromEPFs(test_pool);
 
     const jsonFilePath = path.join(
       __dirname,
@@ -196,12 +197,12 @@ describe("getEPF", () => {
       g_7_3,
       g_comments_osl,
       g_comments_root,
-      pool
+      test_pool
     );
   });
 
   test("Test ID: 1 - Valid EPF ID", async () => {
-    const result = await getEPF(1, pool);
+    const result = await getEPF(1, test_pool);
 
     const jsonFilePath = path.join(
       __dirname,
@@ -224,13 +225,13 @@ describe("getEPF", () => {
   });
 
   test("Test ID: 2 - Invalid EPF datatype", async () => {
-    const result = await expect(getEPF("1", pool)).rejects.toThrow(
+    const result = await expect(getEPF("1", test_pool)).rejects.toThrow(
       "Unexpected data type"
     );
   });
 
   test("Test ID: 3 - Non-existent EPF ID", async () => {
-    const result = await expect(getEPF(2, pool)).rejects.toThrow(
+    const result = await expect(getEPF(2, test_pool)).rejects.toThrow(
       "Non-existent epf"
     );
   });
@@ -411,7 +412,7 @@ describe("getEPF", () => {
       g_7_3_2,
       g_comments_osl_2,
       g_comments_root_2,
-      pool
+      test_pool
     );
 
     const jsonFilePath_1 = path.join(
@@ -423,8 +424,8 @@ describe("getEPF", () => {
     const data_1 = JSON.parse(jsonData_1);
 
     const results = await Promise.all([
-      await getEPF(1, pool),
-      await getEPF(2, pool),
+      await getEPF(1, test_pool),
+      await getEPF(2, test_pool),
     ]);
     const result_1 = results[0];
     const result_2 = results[1];
@@ -452,8 +453,7 @@ describe("getEPF", () => {
   });
 
   afterAll(async () => {
-    await deleteFromUsers(pool);
-    await deleteFromEPFs(pool);
-    await pool.end();
+    await deleteFromUsers(test_pool);
+    await deleteFromEPFs(test_pool);
   });
 });

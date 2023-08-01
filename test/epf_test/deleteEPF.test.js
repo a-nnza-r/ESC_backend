@@ -1,25 +1,24 @@
 import { createEPF, deleteEPF } from "../../models/epf_db.js";
 import { createUser } from "../../models/user_db.js";
-import {
-  createPool,
-  deleteFromUsers,
-  deleteFromEPFs,
-} from "./epf_test_utils.js";
+import { test_pool, deleteFromUsers, deleteFromEPFs } from "./epf_test_utils";
 
 import path from "path";
 import fs from "fs";
 
-let pool;
-
 describe("deleteEPF", () => {
   beforeAll(async () => {
-    pool = createPool();
-    await deleteFromUsers(pool);
-    await createUser("1", "name 1", "name_1@mymail.sutd.edu.sg", "exco", pool);
+    await deleteFromUsers(test_pool);
+    await createUser(
+      "1",
+      "name 1",
+      "name_1@mymail.sutd.edu.sg",
+      "exco",
+      test_pool
+    );
   });
 
   beforeEach(async () => {
-    await deleteFromEPFs(pool);
+    await deleteFromEPFs(test_pool);
 
     const jsonFilePath = path.join(
       __dirname,
@@ -196,14 +195,14 @@ describe("deleteEPF", () => {
       g_7_3,
       g_comments_osl,
       g_comments_root,
-      pool
+      test_pool
     );
   });
 
   test("Test ID: 1 - Valid EPF ID", async () => {
-    const result = await deleteEPF(1, pool);
+    const result = await deleteEPF(1, test_pool);
 
-    const result_records = await pool.query(
+    const result_records = await test_pool.query(
       "SELECT COUNT(*) FROM EPFS WHERE is_deleted=false;"
     );
     const recordCount = result_records.rows[0].count;
@@ -213,20 +212,19 @@ describe("deleteEPF", () => {
   });
 
   test("Test ID: 2 - Invalid EPF datatype", async () => {
-    const result = await expect(deleteEPF("1", pool)).rejects.toThrow(
+    const result = await expect(deleteEPF("1", test_pool)).rejects.toThrow(
       "Unexpected data type"
     );
   });
 
   test("Test ID: 3 - Non-existent EPF ID", async () => {
-    const result = await expect(deleteEPF(2, pool)).rejects.toThrow(
+    const result = await expect(deleteEPF(2, test_pool)).rejects.toThrow(
       "Non-existent epf"
     );
   });
 
   afterAll(async () => {
-    await deleteFromUsers(pool);
-    await deleteFromEPFs(pool);
-    await pool.end();
+    await deleteFromUsers(test_pool);
+    await deleteFromEPFs(test_pool);
   });
 });

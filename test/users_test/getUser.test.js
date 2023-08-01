@@ -1,34 +1,29 @@
-const { getUser, createUser } = require("../../models/user_db");
-const {
-  createPool,
+import { getUser, createUser } from "../../models/user_db";
+import {
+  test_pool,
   deleteFromTables,
   expectUserToMatch,
-} = require("./exco_test_utils");
+} from "./exco_test_utils";
 
-let pool;
 let createdUserId;
 
 describe("getUser", () => {
-  beforeAll(async () => {
-    pool = await createPool();
-  });
-
   beforeEach(async () => {
-    await deleteFromTables(pool);
+    await deleteFromTables(test_pool);
     createdUserId = "12345678"; // or generate this dynamically
     const result = await createUser(
       createdUserId,
       "Test User",
       "test@test.com",
       "exco",
-      pool
+      test_pool
     );
     // assuming the createUser function returns the created user
     createdUserId = result.user_id;
   });
 
   test("Test ID: 1 - Valid user ID: Retrieve user record by user ID", async () => {
-    const result = await getUser(createdUserId, pool);
+    const result = await getUser(createdUserId, test_pool);
     expect(result).toHaveLength(1);
     expectUserToMatch(result[0], {
       user_id: createdUserId,
@@ -40,18 +35,17 @@ describe("getUser", () => {
 
   test("Test ID: 2 - Invalid user ID: Retrieve user record by non-existent ID", async () => {
     const nonExistentUserId = "nonexistent";
-    const result = await getUser(nonExistentUserId, pool);
+    const result = await getUser(nonExistentUserId, test_pool);
     expect(result).toHaveLength(0);
   });
 
   test("Test ID: 3 - No user ID provided: Retrieve user record with no input", async () => {
-    await expect(getUser(undefined, pool)).rejects.toThrow(
+    await expect(getUser(undefined, test_pool)).rejects.toThrow(
       "User ID must be provided"
     );
   });
 
   afterAll(async () => {
-    await deleteFromTables(pool);
-    await pool.end();
+    await deleteFromTables(test_pool);
   });
 });

@@ -1,5 +1,3 @@
-// db_utils.js
-
 import pg from "pg";
 const { Pool } = pg;
 import dotenv from "dotenv";
@@ -13,4 +11,4 @@ const credentials = {
   database: process.env.DATABASE,
 };
 
-export const createPool = () => new Pool(credentials);
+export const db_pool = new Pool(credentials);

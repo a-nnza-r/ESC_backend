@@ -1,49 +1,31 @@
-import pg from "pg";
-const { Pool } = pg;
-import dotenv from "dotenv";
-dotenv.config();
+import { test_db_pool } from "./../test_utils";
 
-// Test database credentials
-const testCredentials = {
-  host: process.env.HOST,
-  user: process.env.USER,
-  port: process.env.PORT,
-  password: process.env.TESTPASSWORD,
-  database: process.env.TESTDATABASE,
-};
-
-// Create pool function
-async function createPool() {
-  const pool = new Pool(testCredentials);
-  return pool;
-}
-
-async function deleteFromTables(pool) {
-  const client = await pool.connect();
+export async function deleteFromTables(pool) {
+  let client;
   try {
+    client = await pool.connect();
     await client.query("BEGIN");
     await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
     await client.query("TRUNCATE TABLE epfs CASCADE;");
     await client.query("TRUNCATE TABLE users CASCADE;");
     await client.query("COMMIT");
-  } catch (e) {
-    await client.query("ROLLBACK");
-    console.error("Error on truncating tables:", e.stack);
-    throw e;
+  } catch (err) {
+    if (client) {
+      await client.query("ROLLBACK");
+      throw err;
+    } else new Error("couldnt acquire client");
+    throw err;
   } finally {
-    client.release();
+    if (client) {
+      client.release();
+    }
   }
 }
 
-// Updated expectUserToMatch
-function expectUserToMatch(user, expectedProperties) {
+export function expectUserToMatch(user, expectedProperties) {
   Object.entries(expectedProperties).forEach(([key, value]) => {
     expect(user[key]).toEqual(value);
   });
 }
 
-module.exports = {
-  createPool,
-  deleteFromTables,
-  expectUserToMatch,
-};
+export const test_pool = test_db_pool;

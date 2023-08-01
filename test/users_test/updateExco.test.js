@@ -1,19 +1,13 @@
-const { getUser, createUser, updateUser } = require("../../models/user_db");
-const {
-  createPool,
+import { getUser, createUser, updateUser } from "../../models/user_db";
+import {
+  test_pool,
   deleteFromTables,
   expectUserToMatch,
-} = require("./exco_test_utils");
-
-let pool;
+} from "./exco_test_utils";
 
 describe("updateUser", () => {
-  beforeAll(async () => {
-    pool = await createPool();
-  });
-
   beforeEach(async () => {
-    await deleteFromTables(pool);
+    await deleteFromTables(test_pool);
   });
 
   test("Test ID: 1 - Valid inputs: Update user record by user_id", async () => {
@@ -28,14 +22,14 @@ describe("updateUser", () => {
       userData.name,
       userData.email,
       userData.type,
-      pool
+      test_pool
     );
     const updatedUser = await updateUser(
       userData.userID,
       "Updated Name",
       "updated@example.com",
       "exco",
-      pool
+      test_pool
     );
     expectUserToMatch(updatedUser, {
       user_id: userData.userID,
@@ -47,13 +41,25 @@ describe("updateUser", () => {
 
   test("Test ID: 2 - Invalid user_id: Update user record by non-existent ID", async () => {
     await expect(
-      updateUser("999", "Updated Name", "updated@example.com", "exco", pool)
+      updateUser(
+        "999",
+        "Updated Name",
+        "updated@example.com",
+        "exco",
+        test_pool
+      )
     ).rejects.toThrow();
   });
 
   test("Test ID: 3 - Non-integer user_id: Update user record by non-integer", async () => {
     await expect(
-      updateUser("abc", "Updated Name", "updated@example.com", "exco", pool)
+      updateUser(
+        "abc",
+        "Updated Name",
+        "updated@example.com",
+        "exco",
+        test_pool
+      )
     ).rejects.toThrow();
   });
 
@@ -69,15 +75,23 @@ describe("updateUser", () => {
       userData.name,
       userData.email,
       userData.type,
-      pool
+      test_pool
     );
     await expect(
-      updateUser(userData.userID, "Updated Name", "invalidemail", "exco", pool)
+      updateUser(
+        userData.userID,
+        "Updated Name",
+        "invalidemail",
+        "exco",
+        test_pool
+      )
     ).rejects.toThrow();
   });
 
   test("Test ID: 5 - No inputs: Update user record without providing inputs", async () => {
-    await expect(updateUser(null, null, null, null, pool)).rejects.toThrow();
+    await expect(
+      updateUser(null, null, null, null, test_pool)
+    ).rejects.toThrow();
   });
 
   test("Test ID: 6 - Missing name/email: Update user record without providing name/email", async () => {
@@ -92,15 +106,14 @@ describe("updateUser", () => {
       userData.name,
       userData.email,
       userData.type,
-      pool
+      test_pool
     );
     await expect(
-      updateUser(userData.userID, null, null, null, pool)
+      updateUser(userData.userID, null, null, null, test_pool)
     ).rejects.toThrow();
   });
 
   afterAll(async () => {
-    await deleteFromTables(pool);
-    await pool.end();
+    await deleteFromTables(test_pool);
   });
 });

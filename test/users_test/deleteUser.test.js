@@ -1,20 +1,13 @@
-const { createUser, deleteUser, getUser } = require("../../models/user_db");
-const {
-  createPool,
+import { createUser, deleteUser, getUser } from "../../models/user_db";
+import {
+  test_pool,
   deleteFromTables,
   expectUserToMatch,
-} = require("./exco_test_utils");
-
-let pool;
+} from "./exco_test_utils";
 
 describe("deleteUser", () => {
-  beforeAll(async () => {
-    pool = await createPool();
-    await deleteFromTables(pool);
-  });
-
   afterEach(async () => {
-    await deleteFromTables(pool);
+    await deleteFromTables(test_pool);
   });
 
   test("Test ID: 1 - Valid user ID, Delete user record by user ID", async () => {
@@ -27,9 +20,9 @@ describe("deleteUser", () => {
       testName,
       testEmail,
       testType,
-      pool
+      test_pool
     );
-    const deletedUser = await deleteUser(createdUser.user_id, pool);
+    const deletedUser = await deleteUser(createdUser.user_id, test_pool);
 
     expectUserToMatch(deletedUser, {
       user_id: createdUser.user_id,
@@ -38,7 +31,7 @@ describe("deleteUser", () => {
       is_deleted: true,
     });
 
-    const fetchedUser = await getUser(createdUser.user_id, pool);
+    const fetchedUser = await getUser(createdUser.user_id, test_pool);
     expect(fetchedUser).toEqual([]); // expect null if user cannot be found
   });
 
@@ -52,29 +45,28 @@ describe("deleteUser", () => {
       testName,
       testEmail,
       testType,
-      pool
+      test_pool
     );
-    await deleteUser(createdUser.user_id, pool);
-    await expect(deleteUser(createdUser.user_id, pool)).rejects.toThrow(
+    await deleteUser(createdUser.user_id, test_pool);
+    await expect(deleteUser(createdUser.user_id, test_pool)).rejects.toThrow(
       "User has already been deleted"
     );
   });
 
   test("Test ID: 3 - Non-existing/existing but deleted user ID, Delete user record by a non-existing ID", async () => {
     const nonExistingUserId = "nonexistent";
-    await expect(deleteUser(nonExistingUserId, pool)).rejects.toThrow(
+    await expect(deleteUser(nonExistingUserId, test_pool)).rejects.toThrow(
       "User does not exist"
     );
   });
 
   test("Test ID: 4 - No User ID, Delete user record with no User ID (undefined)", async () => {
-    await expect(deleteUser(undefined, pool)).rejects.toThrow(
+    await expect(deleteUser(undefined, test_pool)).rejects.toThrow(
       "User ID must be provided"
     );
   });
 
   afterAll(async () => {
-    await deleteFromTables(pool);
-    await pool.end();
+    await deleteFromTables(test_pool);
   });
 });

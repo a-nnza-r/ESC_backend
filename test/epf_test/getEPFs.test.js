@@ -1,25 +1,24 @@
 import { createEPF, getEPFs } from "../../models/epf_db.js";
 import { createUser } from "../../models/user_db.js";
-import {
-  createPool,
-  deleteFromUsers,
-  deleteFromEPFs,
-} from "./epf_test_utils.js";
+import { test_pool, deleteFromUsers, deleteFromEPFs } from "./epf_test_utils";
 
 import path from "path";
 import fs from "fs";
 
-let pool;
-
 describe("getEPFs", () => {
   beforeAll(async () => {
-    pool = createPool();
-    await deleteFromUsers(pool);
-    await createUser("1", "name 1", "name_1@mymail.sutd.edu.sg", "exco", pool);
+    await deleteFromUsers(test_pool);
+    await createUser(
+      "1",
+      "name 1",
+      "name_1@mymail.sutd.edu.sg",
+      "exco",
+      test_pool
+    );
   });
 
   beforeEach(async () => {
-    await deleteFromEPFs(pool);
+    await deleteFromEPFs(test_pool);
 
     const jsonFilePath_1 = path.join(
       __dirname,
@@ -291,7 +290,7 @@ describe("getEPFs", () => {
         g_7_3_1,
         g_comments_osl_1,
         g_comments_root_1,
-        pool
+        test_pool
       ),
 
       createEPF(
@@ -377,13 +376,13 @@ describe("getEPFs", () => {
         g_7_3_2,
         g_comments_osl_2,
         g_comments_root_2,
-        pool
+        test_pool
       ),
     ]);
   });
 
   test("Test ID: 1 - Single getEPFs call", async () => {
-    const result = await getEPFs(pool);
+    const result = await getEPFs(test_pool);
 
     const jsonFilePath_1 = path.join(
       __dirname,
@@ -425,8 +424,8 @@ describe("getEPFs", () => {
 
   test("Test ID: 2 - Multiple Concurrent getEPFs call", async () => {
     const results = await Promise.all([
-      await getEPFs(pool),
-      await getEPFs(pool),
+      await getEPFs(test_pool),
+      await getEPFs(test_pool),
     ]);
     const result_1 = results[0];
     const result_2 = results[1];
@@ -527,8 +526,7 @@ describe("getEPFs", () => {
   });
 
   afterAll(async () => {
-    await deleteFromUsers(pool);
-    await deleteFromEPFs(pool);
-    await pool.end();
+    await deleteFromUsers(test_pool);
+    await deleteFromEPFs(test_pool);
   });
 });

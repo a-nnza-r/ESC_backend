@@ -1,27 +1,21 @@
 import { createEPF, getEPF } from "../../models/epf_db.js";
 import { createUser } from "../../models/user_db.js";
-import {
-  createPool,
-  deleteFromUsers,
-  deleteFromEPFs,
-} from "./epf_test_utils.js";
+import { test_pool, deleteFromUsers, deleteFromEPFs } from "./epf_test_utils";
 
 import path from "path";
 import fs from "fs";
 
-let pool;
-
 describe("createEPF", () => {
-  beforeAll(async () => {
-    pool = createPool();
-    await deleteFromUsers(pool);
-    await deleteFromEPFs(pool);
-  });
-
   beforeEach(async () => {
-    await deleteFromUsers(pool);
-    await deleteFromEPFs(pool);
-    await createUser("1", "name 1", "name_1@mymail.sutd.edu.sg", "exco", pool);
+    await deleteFromUsers(test_pool);
+    await deleteFromEPFs(test_pool);
+    await createUser(
+      "1",
+      "name 1",
+      "name_1@mymail.sutd.edu.sg",
+      "exco",
+      test_pool
+    );
   });
 
   test("Test ID: 1 - Create new EPF with valid fields", async () => {
@@ -118,7 +112,7 @@ describe("createEPF", () => {
       g_comments_root,
     } = data;
 
-    const { result, epf_count } = await createEPF(
+    const { result: result, epf_count: epf_count } = await createEPF(
       status,
       exco_user_id,
       a_name,
@@ -201,7 +195,7 @@ describe("createEPF", () => {
       g_7_3,
       g_comments_osl,
       g_comments_root,
-      pool
+      test_pool
     );
 
     let matches = true;
@@ -394,7 +388,7 @@ describe("createEPF", () => {
         g_7_3,
         g_comments_osl,
         g_comments_root,
-        pool
+        test_pool
       )
     ).rejects.toThrow("Non-existent exco user id");
   });
@@ -577,7 +571,7 @@ describe("createEPF", () => {
         g_7_3,
         g_comments_osl,
         g_comments_root,
-        pool
+        test_pool
       )
     ).rejects.toThrow("Event name missing");
   });
@@ -760,7 +754,7 @@ describe("createEPF", () => {
         g_7_3,
         g_comments_osl,
         g_comments_root,
-        pool
+        test_pool
       )
     ).rejects.toThrow("Unexpected data type");
   });
@@ -943,7 +937,7 @@ describe("createEPF", () => {
         g_7_3,
         g_comments_osl,
         g_comments_root,
-        pool
+        test_pool
       )
     ).rejects.toThrow("Unexpected data type");
   });
@@ -1126,7 +1120,7 @@ describe("createEPF", () => {
         g_7_3,
         g_comments_osl,
         g_comments_root,
-        pool
+        test_pool
       )
     ).rejects.toThrow("Unexpected data type");
   });
@@ -1309,7 +1303,7 @@ describe("createEPF", () => {
         g_7_3,
         g_comments_osl,
         g_comments_root,
-        pool
+        test_pool
       )
     ).rejects.toThrow("Unexpected data type");
   });
@@ -1585,7 +1579,7 @@ describe("createEPF", () => {
         g_7_3_1,
         g_comments_osl_1,
         g_comments_root_1,
-        pool
+        test_pool
       ),
 
       createEPF(
@@ -1671,7 +1665,7 @@ describe("createEPF", () => {
         g_7_3_2,
         g_comments_osl_2,
         g_comments_root_2,
-        pool
+        test_pool
       ),
     ]);
 
@@ -1679,8 +1673,9 @@ describe("createEPF", () => {
     const { result: result_EPF2, epf_count: epf_count_EPF2 } = createdEPFs[1];
 
     let result_records = null;
-    const client = await pool.connect();
+    let client;
     try {
+      client = await test_pool.connect();
       await client.query("BEGIN");
       await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
       result_records = await client.query("SELECT COUNT(*) FROM EPFS;");
@@ -1744,8 +1739,7 @@ describe("createEPF", () => {
   });
 
   afterAll(async () => {
-    await deleteFromUsers(pool);
-    await deleteFromEPFs(pool);
-    await pool.end();
+    await deleteFromUsers(test_pool);
+    await deleteFromEPFs(test_pool);
   });
 });
