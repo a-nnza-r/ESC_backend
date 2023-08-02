@@ -15,9 +15,15 @@ import {
   updateUser,
   deleteUser,
 } from "../models/user_db.js";
+import { 
+  validateJSON_createUser, 
+  validateJSON_updateUser, 
+  validateParam_getUser, 
+  validateParam_deleteUser 
+} from "../middleware/validationMiddleware_User.js";
 const router = express.Router();
 
-router.post("/createUser", async (req, res) => {
+router.post("/createUser", validateJSON_createUser, async (req, res) => {
   const data = req.body;
   try {
     const newUser = await createUser(
@@ -37,7 +43,7 @@ router.post("/createUser", async (req, res) => {
   }
 });
 
-router.get("/getUser", async (req, res) => {
+router.get("/getUser", validateParam_getUser, async (req, res) => {
   const data = req.query;
   try {
     const result = await getUser(data.user_id);
@@ -81,7 +87,7 @@ router.get("/getEXCOEPFs", async (req, res) => {
   }
 });
 
-router.put("/updateUser", async (req, res) => {
+router.put("/updateUser", validateJSON_updateUser, async (req, res) => {
   try {
     const data = req.body;
     await updateUser(
@@ -97,7 +103,7 @@ router.put("/updateUser", async (req, res) => {
   }
 });
 
-router.delete("/deleteUser", async (req, res) => {
+router.delete("/deleteUser", validateParam_deleteUser, async (req, res) => {
   try {
     const data = req.query;
     const user_id = data.user_id;

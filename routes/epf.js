@@ -20,7 +20,7 @@ import {
   validateJSON_updateEPF, 
   validateParam_getEPF, 
   validateParam_deleteEPF 
-} from "../middleware/validationMiddleware.js";
+} from "../middleware/validationMiddleware_EPF.js";
 const router = express.Router();
 
 router.post("/createEPF", validateJSON_createEPF, async (req, res) => {

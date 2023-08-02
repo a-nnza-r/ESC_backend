@@ -1,9 +1,6 @@
-import { 
-    validateJSON_createEPF, 
-    validateJSON_updateEPF, 
-    validateParam_getEPF, 
-    validateParam_deleteEPF 
-  } from "../../middleware/validationMiddleware_EPF.js";
+import {  
+    validateParam_getUser
+  } from "../../middleware/validationMiddleware_User.js";
 
 import { randomBytes } from "crypto";
 
@@ -16,35 +13,35 @@ const mockResponse = () => {
   return res;
 };
 
-describe('Robustness/Fuzzy testing of getEPF API', () => {
+describe('Robustness/Fuzzy testing of getUser API', () => {
 
 
-  test('Test ID 1: Call next() when "epf_id" key exists in request query', () => {
+  test('Test ID 1: Call next() when "user_id" key exists in request query', () => {
     const req = mockRequest({
-      epf_id: 1,
+      user_id: 1,
     });
     const res = mockResponse();
     const next = jest.fn();
 
-    validateParam_getEPF(req, res, next);
+    validateParam_getUser(req, res, next);
 
     expect(next).toHaveBeenCalledTimes(1);
     expect(res.status).not.toHaveBeenCalled();
     expect(res.json).not.toHaveBeenCalled();
   });
 
-  test('Test ID 2: Return 400 error when "epf_id" key is missing from request query', () => {
+  test('Test ID 2: Return 400 error when "user_id" key is missing from request query', () => {
     const req = mockRequest({
-      // "epf_id" key is missing
+      // "user_id" key is missing
     });
     const res = mockResponse();
     const next = jest.fn();
 
-    validateParam_getEPF(req, res, next);
+    validateParam_getUser(req, res, next);
 
     expect(next).not.toHaveBeenCalled();
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Missing epf_id key for get EPF query' });
+    expect(res.json).toHaveBeenCalledWith({ error: 'Missing user_id key for get User query' });
   });
 
   test('Test ID 3: Return 400 error when request query is invalid', () => {
@@ -53,11 +50,11 @@ describe('Robustness/Fuzzy testing of getEPF API', () => {
     const res = mockResponse();
     const next = jest.fn();
 
-    validateParam_getEPF(req, res, next);
+    validateParam_getUser(req, res, next);
 
     expect(next).not.toHaveBeenCalled();
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Missing epf_id key for get EPF query' });
+    expect(res.json).toHaveBeenCalledWith({ error: 'Missing user_id key for get User query' });
   });
 
 

@@ -1,14 +1,11 @@
 import { 
-    validateJSON_createEPF, 
-    validateJSON_updateEPF, 
-    validateParam_getEPF, 
-    validateParam_deleteEPF 
-  } from "../../middleware/validationMiddleware_EPF.js";
+    validateJSON_createUser
+  } from "../../middleware/validationMiddleware_User.js";
 import path from "path";
 import fs from "fs";
 import { randomBytes } from "crypto";
 
-const jsonFilePath = path.join(__dirname, 'createEPF_testjson', 'createEPF_test1.json');
+const jsonFilePath = path.join(__dirname, 'createUser_testjson', 'createUser_test1.json');
 const jsonData = fs.readFileSync(jsonFilePath, 'utf-8');
 const valid_req_body = JSON.parse(jsonData);
 
@@ -21,7 +18,7 @@ const mockResponse = () => {
   return res;
 };
 
-describe('Robustness/Fuzzy testing of createEPF API', () => {
+describe('Robustness/Fuzzy testing of createUser API', () => {
 
 
 
@@ -30,7 +27,7 @@ describe('Robustness/Fuzzy testing of createEPF API', () => {
     const res = mockResponse();
     const next = jest.fn();
 
-    validateJSON_createEPF(req, res, next);
+    validateJSON_createUser(req, res, next);
 
     expect(next).toHaveBeenCalledTimes(1);
     expect(res.status).not.toHaveBeenCalled();
@@ -40,17 +37,17 @@ describe('Robustness/Fuzzy testing of createEPF API', () => {
 
   test('Test ID 2: Return 400 error when JSON payload is incomplete', () => {
     const req = mockRequest({
-      "status": "Pending",
-      "exco_user_id": "1",
-      "a_name": "user 1"});
+        "user_id": "1",
+        "name": "Name 1",
+        "email": "name_1@mymail.sutd.edu.sg"});
     const res = mockResponse();
     const next = jest.fn();
 
-    validateJSON_createEPF(req, res, next);
+    validateJSON_createUser(req, res, next);
 
     expect(next).not.toHaveBeenCalled();
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Invalid JSON payload format for createEPF' });
+    expect(res.json).toHaveBeenCalledWith({ error: 'Invalid JSON payload format for createUser' });
   });
 
   test('Test ID 3: Return 400 error when payload is invalid', () => {
@@ -59,11 +56,11 @@ describe('Robustness/Fuzzy testing of createEPF API', () => {
     const res = mockResponse();
     const next = jest.fn();
 
-    validateJSON_createEPF(req, res, next);
+    validateJSON_createUser(req, res, next);
 
     expect(next).not.toHaveBeenCalled();
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Invalid JSON payload format for createEPF' });
+    expect(res.json).toHaveBeenCalledWith({ error: 'Invalid JSON payload format for createUser' });
   });
 
 
