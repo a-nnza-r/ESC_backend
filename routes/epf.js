@@ -15,9 +15,15 @@ import {
   updateEPF,
   deleteEPF,
 } from "../models/epf_db.js";
+import { 
+  validateJSON_createEPF, 
+  validateJSON_updateEPF, 
+  validateParam_getEPF, 
+  validateParam_deleteEPF 
+} from "../middleware/validationMiddleware.js";
 const router = express.Router();
 
-router.post("/createEPF", async (req, res) => {
+router.post("/createEPF", validateJSON_createEPF, async (req, res) => {
   const data = req.body;
 
   try {
@@ -115,7 +121,7 @@ router.post("/createEPF", async (req, res) => {
   }
 });
 
-router.get("/getEPF", async (req, res) => {
+router.get("/getEPF", validateParam_getEPF, async (req, res) => {
   try {
     const data = req.query;
     const result = await getEPF(parseInt(data.epf_id));
@@ -144,7 +150,7 @@ router.get("/getEPFs", async (req, res) => {
   }
 });
 
-router.put("/updateEPF", async (req, res) => {
+router.put("/updateEPF", validateJSON_updateEPF, async (req, res) => {
   const data = req.body;
   try {
     const updateCheck = await updateEPF(
@@ -245,7 +251,7 @@ router.put("/updateEPF", async (req, res) => {
   }
 });
 
-router.delete("/deleteEPF", async (req, res) => {
+router.delete("/deleteEPF", validateParam_deleteEPF, async (req, res) => {
   const data = req.query;
   try {
     const deletedEPF = await deleteEPF(parseInt(data.epf_id));
