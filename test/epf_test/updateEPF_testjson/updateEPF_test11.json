@@ -1,11 +1,11 @@
 {
     "epf_id": 1,
-    "status": ["2023-06-21", "2023-06-22"],
+    "status": "Pending",
     "exco_user_id": "1",
     "a_name": "user 1",
     "a_student_id": 1000001,
     "a_organisation": "organisation 1",
-    "a_contact_number": 99998888,
+    "a_contact_number": 7999888,
     "a_email": "user_1@mymail.sutd.edu.sg",
     "a_comments_osl": "A Comment OSL",
     "a_comments_root": "A Comment ROOT",

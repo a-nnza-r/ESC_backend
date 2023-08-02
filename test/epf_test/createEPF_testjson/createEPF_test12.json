@@ -1,6 +1,5 @@
 {
-    "epf_id": 1,
-    "status": ["2023-06-21", "2023-06-22"],
+    "status": "Pending",
     "exco_user_id": "1",
     "a_name": "user 1",
     "a_student_id": 1000001,
@@ -67,7 +66,7 @@
     "e_comments_osl": "E Comment OSL",
     "e_comments_root": "E Comment ROOT",
     "f_name": ["name 1", "name 2"],
-    "f_student_id": ["1006360", "1004340"],
+    "f_student_id": ["100636", "1004340"],
     "f_position": ["position 1", "position 2"],
     "f_comments_osl": "F Comment OSL",
     "f_comments_root": "F Comment ROOT",
@@ -94,4 +93,4 @@
     "g_7_3": "blank",
     "g_comments_osl": "G Comment OSL",
     "g_comments_root": "G Comment ROOT"
-}
+  }
