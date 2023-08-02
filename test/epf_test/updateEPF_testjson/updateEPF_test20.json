@@ -1,5 +1,6 @@
 {
-  "status": "Pending Approval",
+    "epf_id": 1,
+    "status": "Pending",
   "exco_user_id": "1",
   "a_name": "user 1",
   "a_student_id": 1000001,
@@ -15,7 +16,7 @@
   "b_event_objective": "event Objective 1",
   "b_comments_osl": "B Comment OSL",
   "b_comments_root": "B Comment ROOT",
-  "c1_date": "test",
+  "c1_date": ["2023-06-21", "2023-06-22"],
   "c1_time": ["16:49", "16:50"],
   "c1_activity_and_description": [
     "activity 1 description 1",

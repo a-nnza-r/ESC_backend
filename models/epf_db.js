@@ -88,6 +88,8 @@ const epf_db_datatypes_create = {
 var epf_db_datatypes_update = { ...epf_db_datatypes_create };
 epf_db_datatypes_update = { epf_id: "number", ...epf_db_datatypes_create };
 
+const status_types = ['Draft', 'Pending Approval', 'Approved', 'Rejected'];
+
 export async function update_outstanding_EPF_count(client) {
   try {
     const exco_user_ids = await client.query(
@@ -379,6 +381,11 @@ export async function createEPF(
     if (typeof values[i] !== datatypes[i]) {
       throw new Error("Unexpected data type");
     }
+  }
+
+  //Status validation
+  if(!status_types.includes(status)){
+    throw new Error("Invalid Status Type")
   }
 
   //Student ID validation
@@ -846,6 +853,11 @@ export async function updateEPF(
     if (typeof values[i] !== datatypes[i]) {
       throw new Error("Unexpected data type");
     }
+  }
+
+  //Status validation
+  if(!status_types.includes(status)){
+    throw new Error("Invalid Status Type")
   }
 
   //Student ID validation
