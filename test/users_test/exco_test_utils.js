@@ -9,7 +9,7 @@ const testCredentials = {
   user: "postgres",
   port: "5432",
   password: "12345678",
-  database: "esc_db_test",
+  database: "esc_test_db",
 };
 
 // Create pool function
