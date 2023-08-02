@@ -9,9 +9,8 @@ const testCredentials = {
   user: "postgres",
   port: "5432",
   password: "12345678",
-  database: "esc_db_test",
+  database: "esc_test_db",
 };
-
 
 // Create pool function
 function createPool() {
@@ -20,6 +19,8 @@ function createPool() {
 
 async function deleteFromUsers(pool) {
   const client = await pool.connect()
+  console.log("connected")
+
   try {
     await pool.query("TRUNCATE TABLE users RESTART IDENTITY CASCADE;");
   } catch (e) {
