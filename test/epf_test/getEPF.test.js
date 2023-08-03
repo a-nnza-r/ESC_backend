@@ -5,8 +5,6 @@ import { test_pool, deleteFromUsers, deleteFromEPFs } from "./epf_test_utils";
 import path from "path";
 import fs from "fs";
 
-let pool;
-
 describe("getEPF", () => {
   beforeAll(async () => {
     await deleteFromUsers(test_pool);
