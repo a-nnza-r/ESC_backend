@@ -22,7 +22,7 @@ describe("createEPF", () => {
     const jsonFilePath = path.join(
       __dirname,
       "createEPF_testjson",
-      "createEPF_test1.json"
+      "createEPF_test1lol.json"
     );
     const jsonData = fs.readFileSync(jsonFilePath, "utf-8");
     const data = JSON.parse(jsonData);
@@ -1738,7 +1738,6 @@ describe("createEPF", () => {
     }
   });
 
-
   test("Test ID: 9 - Invalid Student ID", async () => {
     const jsonFilePath = path.join(
       __dirname,
@@ -2288,9 +2287,6 @@ describe("createEPF", () => {
     ).rejects.toThrow("Invalid email format");
   });
 
-
-
-
   test("Test ID: 12 - Invalid Student ID in List", async () => {
     const jsonFilePath = path.join(
       __dirname,
@@ -2473,8 +2469,6 @@ describe("createEPF", () => {
       )
     ).rejects.toThrow("Invalid Student ID");
   });
-
-
 
   test("Test ID: 13 - Invalid Value for Money", async () => {
     const jsonFilePath = path.join(
@@ -2659,8 +2653,6 @@ describe("createEPF", () => {
     ).rejects.toThrow("Invalid value for money");
   });
 
-
-
   test("Test ID: 14 - Invalid Value for Money in List", async () => {
     const jsonFilePath = path.join(
       __dirname,
@@ -2844,9 +2836,6 @@ describe("createEPF", () => {
     ).rejects.toThrow("Invalid value for money");
   });
 
-
-
-
   test("Test ID: 15 - Invalid Value for Quantity in List", async () => {
     const jsonFilePath = path.join(
       __dirname,
@@ -3029,7 +3018,6 @@ describe("createEPF", () => {
       )
     ).rejects.toThrow("Invalid quantity value");
   });
-
 
   test("Test ID: 16 - Invalid Datetime format for Event Schedule", async () => {
     const jsonFilePath = path.join(
@@ -3397,7 +3385,6 @@ describe("createEPF", () => {
     ).rejects.toThrow("Invalid Date Format");
   });
 
-
   test("Test ID: 18 - Invalid Time format in List", async () => {
     const jsonFilePath = path.join(
       __dirname,
@@ -3581,7 +3568,6 @@ describe("createEPF", () => {
     ).rejects.toThrow("Invalid Time Format");
   });
 
-
   test("Test ID: 19 - Invalid Status Type", async () => {
     const jsonFilePath = path.join(
       __dirname,
@@ -3764,12 +3750,6 @@ describe("createEPF", () => {
       )
     ).rejects.toThrow("Invalid Status Type");
   });
-
-
-
-
-
-
 
   afterAll(async () => {
     await deleteFromUsers(test_pool);

@@ -88,7 +88,7 @@ const epf_db_datatypes_create = {
 var epf_db_datatypes_update = { ...epf_db_datatypes_create };
 epf_db_datatypes_update = { epf_id: "number", ...epf_db_datatypes_create };
 
-const status_types = ['Draft', 'Pending Approval', 'Approved', 'Rejected'];
+const status_types = ["Draft", "Pending Approval", "Approved", "Rejected"];
 
 export async function update_outstanding_EPF_count(client) {
   try {
@@ -378,132 +378,166 @@ export async function createEPF(
   const datatypes = Object.values(epf_db_datatypes_create);
 
   for (let i = 0; i < values.length; i++) {
-    if (typeof values[i] !== datatypes[i]) {
+    if (typeof values[i] !== datatypes[i] && values[i] !== undefined) {
       throw new Error("Unexpected data type");
     }
   }
 
   //Status validation
-  if(!status_types.includes(status)){
-    throw new Error("Invalid Status Type")
+  if (!status_types.includes(status)) {
+    throw new Error("Invalid Status Type");
   }
 
   //Student ID validation
   const student_id_regex = /^1\d{6}$/;
-  if(!student_id_regex.test(A_student_id)) {
-    throw new Error("Invalid Student ID")
+  if (!student_id_regex.test(A_student_id) && A_student_id !== undefined) {
+    throw new Error("Invalid Student ID");
   }
+
   F_student_id.forEach((student_id) => {
-    if(!student_id_regex.test(parseInt(student_id))) {
-      throw new Error("Invalid Student ID")
+    if (!student_id_regex.test(parseInt(student_id)) && student_id !== "") {
+      throw new Error("Invalid Student ID");
     }
-  })
+  });
 
   //Contact number validation
   const contact_number_regex = /^[689]\d{7}$/;
-  if(!contact_number_regex.test(A_contact_number)) {
-    throw new Error("Invalid Contact Number")
+  if (
+    !contact_number_regex.test(A_contact_number) &&
+    A_contact_number !== undefined
+  ) {
+    throw new Error("Invalid Contact Number");
   }
 
   //Email format validation
-  const [username, domain] = A_email.split("@");
-  const isValidUsername = /^[^\s@]+$/;
-  const isValidDomain = /^[^\s@]+\.[^\s@]+$/;
-  if (
-    !A_email.includes("@") ||
-    !isValidUsername.test(username) ||
-    !isValidDomain.test(domain)
-  ) {
-    throw new Error("Invalid email format");
+  if (A_email !== undefined) {
+    const [username, domain] = A_email.split("@");
+    const isValidUsername = /^[^\s@]+$/;
+    const isValidDomain = /^[^\s@]+\.[^\s@]+$/;
+    if (
+      !A_email.includes("@") ||
+      !isValidUsername.test(username) ||
+      !isValidDomain.test(domain)
+    ) {
+      throw new Error("Invalid email format");
+    }
   }
 
   //Validation for money
-  if(D1A_club_income_fund < 0 || 
-    D1A_osl_seed_fund < 0 ||
-    D1A_donation < 0 ||
-    D1B_revenue < 0 ||
-    D1B_donation_or_scholarship < 0 ||
-    D1B_total_source_of_funds < 0 ||
-    D11_total_revenue < 0 ||
-    D2_total_expenditure < 0
-    ) {
-      throw new Error("Invalid value for money");
+  if (
+    (D1A_club_income_fund < 0 && D1A_club_income_fund !== undefined) ||
+    (D1A_osl_seed_fund < 0 && D1A_osl_seed_fund !== undefined) ||
+    (D1A_donation < 0 && D1A_donation !== undefined) ||
+    (D1B_revenue < 0 && D1B_revenue !== undefined) ||
+    (D1B_donation_or_scholarship < 0 &&
+      D1B_donation_or_scholarship !== undefined) ||
+    (D1B_total_source_of_funds < 0 &&
+      D1B_total_source_of_funds !== undefined) ||
+    (D11_total_revenue < 0 && D11_total_revenue !== undefined) ||
+    (D2_total_expenditure < 0 && D2_total_expenditure !== undefined)
+  ) {
+    throw new Error("Invalid value for money");
+  }
+  D11_price.forEach((price) => {
+    if (price !== "") {
+      if (price < 0) {
+        throw new Error("Invalid value for money");
+      }
     }
-  D11_price.forEach((price)=> {
-    if(price<0) {
-      throw new Error("Invalid value for money");
+  });
+  D11_amount.forEach((price) => {
+    if (price !== "") {
+      if (price < 0) {
+        throw new Error("Invalid value for money");
+      }
     }
-  })
-  D11_amount.forEach((price)=> {
-    if(price<0) {
-      throw new Error("Invalid value for money");
-    }
-  })
+  });
   //Validation for Quantity
-  D11_quantity.forEach((price)=> {
-    if(price<0) {
-      throw new Error("Invalid quantity value");
+  D11_quantity.forEach((price) => {
+    if (price !== "") {
+      if (price < 0) {
+        throw new Error("Invalid quantity value");
+      }
     }
-  })
+  });
 
   //Check for event name
-  if (B_event_name.trim().length == 0) {
-    throw new Error("Event name missing");
+  if (B_event_name !== undefined) {
+    if (B_event_name.trim().length == 0) {
+      throw new Error("Event name missing");
+    }
   }
 
   //Validation for event schedule
-  const datetime_regex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/
-  if(!datetime_regex.test(B_event_schedule)) {
-    throw new Error("Invalid Datetime Format");
+  const datetime_regex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/;
+  if (B_event_schedule !== undefined) {
+    if (!datetime_regex.test(B_event_schedule)) {
+      throw new Error("Invalid Datetime Format");
+    }
   }
 
   //Validation for date
-  const date_regex = /^\d{4}-\d{2}-\d{2}$/
-  C1_date.forEach((date)=> {
-    if(!date_regex.test(date)) {
-      throw new Error("Invalid Date Format");
+  const date_regex = /^\d{4}-\d{2}-\d{2}$/;
+  C1_date.forEach((date) => {
+    if (date !== "") {
+      if (!date_regex.test(date)) {
+        throw new Error("Invalid Date Format");
+      }
     }
-  })
-  C2_date.forEach((date)=> {
-    if(!date_regex.test(date)) {
-      throw new Error("Invalid Date Format");
+  });
+  C2_date.forEach((date) => {
+    if (date !== "") {
+      if (!date_regex.test(date)) {
+        throw new Error("Invalid Date Format");
+      }
     }
-  })
-  C3_date.forEach((date)=> {
-    if(!date_regex.test(date)) {
-      throw new Error("Invalid Date Format");
+  });
+  C3_date.forEach((date) => {
+    if (date !== "") {
+      if (!date_regex.test(date)) {
+        throw new Error("Invalid Date Format");
+      }
     }
-  })
-  C3_cleanup_date.forEach((date)=> {
-    if(!date_regex.test(date)) {
-      throw new Error("Invalid Date Format");
+  });
+  C3_cleanup_date.forEach((date) => {
+    if (date !== "") {
+      if (!date_regex.test(date)) {
+        throw new Error("Invalid Date Format");
+      }
     }
-  })
+  });
   //Validation for time
-  const time_regex = /^(?:[01]\d|2[0-3]):[0-5]\d$/
-  C1_time.forEach((time)=> {
-    if(!time_regex.test(time)) {
-      throw new Error("Invalid Time Format");
+  const time_regex = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
+  C1_time.forEach((time) => {
+    if (time !== "") {
+      if (!time_regex.test(time)) {
+        throw new Error("Invalid Time Format");
+      }
     }
-  })
-  C2_time.forEach((time)=> {
-    if(!time_regex.test(time)) {
-      throw new Error("Invalid Time Format");
-    }
-  })
-  C3_time.forEach((time)=> {
-    if(!time_regex.test(time)) {
-      throw new Error("Invalid Time Format");
-    }
-  })
-  C3_cleanup_time.forEach((time)=> {
-    if(!time_regex.test(time)) {
-      throw new Error("Invalid Time Format");
-    }
-  })
+  });
 
+  C2_time.forEach((time) => {
+    if (time !== "") {
+      if (!time_regex.test(time)) {
+        throw new Error("Invalid Time Format");
+      }
+    }
+  });
+  C3_time.forEach((time) => {
+    if (time !== "") {
+      if (!time_regex.test(time)) {
+        throw new Error("Invalid Time Format");
+      }
+    }
+  });
 
-
+  C3_cleanup_time.forEach((time) => {
+    if (time !== "") {
+      if (!time_regex.test(time)) {
+        throw new Error("Invalid Time Format");
+      }
+    }
+  });
 
   let client;
   let result = null;
@@ -850,129 +884,170 @@ export async function updateEPF(
   const datatypes = Object.values(epf_db_datatypes_update);
 
   for (let i = 0; i < values.length; i++) {
-    if (typeof values[i] !== datatypes[i]) {
+    if (typeof values[i] !== datatypes[i] && values[i] !== undefined) {
       throw new Error("Unexpected data type");
     }
   }
 
   //Status validation
-  if(!status_types.includes(status)){
-    throw new Error("Invalid Status Type")
+  if (!status_types.includes(status)) {
+    throw new Error("Invalid Status Type");
   }
 
-  //Student ID validation
   const student_id_regex = /^1\d{6}$/;
-  if(!student_id_regex.test(A_student_id)) {
-    throw new Error("Invalid Student ID")
-  }
-  F_student_id.forEach((student_id) => {
-    if(!student_id_regex.test(parseInt(student_id))) {
-      throw new Error("Invalid Student ID")
+  //Student ID validation
+  if (A_student_id !== undefined) {
+    if (!student_id_regex.test(A_student_id)) {
+      throw new Error("Invalid Student ID");
     }
-  })
+  }
+
+  F_student_id.forEach((student_id) => {
+    if (student_id !== "") {
+      if (!student_id_regex.test(parseInt(student_id))) {
+        throw new Error("Invalid Student ID");
+      }
+    }
+  });
 
   //Contact number validation
-  const contact_number_regex = /^[689]\d{7}$/;
-  if(!contact_number_regex.test(A_contact_number)) {
-    throw new Error("Invalid Contact Number")
+  if (A_contact_number !== undefined) {
+    const contact_number_regex = /^[689]\d{7}$/;
+    if (!contact_number_regex.test(A_contact_number)) {
+      throw new Error("Invalid Contact Number");
+    }
   }
 
   //Email format validation
-  const [username, domain] = A_email.split("@");
-  const isValidUsername = /^[^\s@]+$/;
-  const isValidDomain = /^[^\s@]+\.[^\s@]+$/;
-  if (
-    !A_email.includes("@") ||
-    !isValidUsername.test(username) ||
-    !isValidDomain.test(domain)
-  ) {
-    throw new Error("Invalid email format");
+  if (A_email !== undefined) {
+    const [username, domain] = A_email.split("@");
+    const isValidUsername = /^[^\s@]+$/;
+    const isValidDomain = /^[^\s@]+\.[^\s@]+$/;
+    if (
+      !A_email.includes("@") ||
+      !isValidUsername.test(username) ||
+      !isValidDomain.test(domain)
+    ) {
+      throw new Error("Invalid email format");
+    }
   }
 
   //Validation for money
-  if(D1A_club_income_fund < 0 || 
-    D1A_osl_seed_fund < 0 ||
-    D1A_donation < 0 ||
-    D1B_revenue < 0 ||
-    D1B_donation_or_scholarship < 0 ||
-    D1B_total_source_of_funds < 0 ||
-    D11_total_revenue < 0 ||
-    D2_total_expenditure < 0
-    ) {
-      throw new Error("Invalid value for money");
+  if (
+    (D1A_club_income_fund < 0 && D1A_club_income_fund !== undefined) ||
+    (D1A_osl_seed_fund < 0 && D1A_osl_seed_fund !== undefined) ||
+    (D1A_donation < 0 && D1A_donation !== undefined) ||
+    (D1B_revenue < 0 && D1B_revenue !== undefined) ||
+    (D1B_donation_or_scholarship < 0 &&
+      D1B_donation_or_scholarship !== undefined) ||
+    (D1B_total_source_of_funds < 0 &&
+      D1B_total_source_of_funds !== undefined) ||
+    (D11_total_revenue < 0 && D11_total_revenue !== undefined) ||
+    (D2_total_expenditure < 0 && D2_total_expenditure !== undefined)
+  ) {
+    throw new Error("Invalid value for money");
+  }
+
+  D11_price.forEach((price) => {
+    if (price !== "") {
+      if (price < 0) {
+        throw new Error("Invalid value for money");
+      }
     }
-  D11_price.forEach((price)=> {
-    if(price<0) {
-      throw new Error("Invalid value for money");
+  });
+  D11_amount.forEach((price) => {
+    if (price !== "") {
+      if (price < 0) {
+        throw new Error("Invalid value for money");
+      }
     }
-  })
-  D11_amount.forEach((price)=> {
-    if(price<0) {
-      throw new Error("Invalid value for money");
-    }
-  })
+  });
   //Validation for Quantity
-  D11_quantity.forEach((price)=> {
-    if(price<0) {
-      throw new Error("Invalid quantity value");
+  D11_quantity.forEach((price) => {
+    if (price !== "") {
+      if (price < 0) {
+        throw new Error("Invalid quantity value");
+      }
     }
-  })
+  });
 
   //Check for event name
-  if (B_event_name.trim().length == 0) {
-    throw new Error("Event name missing");
+  if (B_event_name !== undefined) {
+    if (B_event_name.trim().length == 0) {
+      throw new Error("Event name missing");
+    }
   }
 
   //Validation for event schedule
-  const datetime_regex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/
-  if(!datetime_regex.test(B_event_schedule)) {
-    throw new Error("Invalid Datetime Format");
+  const datetime_regex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/;
+  if (B_event_schedule !== undefined) {
+    if (!datetime_regex.test(B_event_schedule)) {
+      throw new Error("Invalid Datetime Format");
+    }
   }
 
   //Validation for date
-  const date_regex = /^\d{4}-\d{2}-\d{2}$/
-  C1_date.forEach((date)=> {
-    if(!date_regex.test(date)) {
-      throw new Error("Invalid Date Format");
+  const date_regex = /^\d{4}-\d{2}-\d{2}$/;
+  C1_date.forEach((date) => {
+    if (date !== "") {
+      if (!date_regex.test(date)) {
+        throw new Error("Invalid Date Format");
+      }
     }
-  })
-  C2_date.forEach((date)=> {
-    if(!date_regex.test(date)) {
-      throw new Error("Invalid Date Format");
+  });
+  C2_date.forEach((date) => {
+    if (date !== "") {
+      if (!date_regex.test(date)) {
+        throw new Error("Invalid Date Format");
+      }
     }
-  })
-  C3_date.forEach((date)=> {
-    if(!date_regex.test(date)) {
-      throw new Error("Invalid Date Format");
+  });
+  C3_date.forEach((date) => {
+    if (date !== "") {
+      if (!date_regex.test(date)) {
+        throw new Error("Invalid Date Format");
+      }
     }
-  })
-  C3_cleanup_date.forEach((date)=> {
-    if(!date_regex.test(date)) {
-      throw new Error("Invalid Date Format");
+  });
+  C3_cleanup_date.forEach((date) => {
+    if (date !== "") {
+      if (!date_regex.test(date)) {
+        throw new Error("Invalid Date Format");
+      }
     }
-  })
+  });
   //Validation for time
-  const time_regex = /^(?:[01]\d|2[0-3]):[0-5]\d$/
-  C1_time.forEach((time)=> {
-    if(!time_regex.test(time)) {
-      throw new Error("Invalid Time Format");
+  const time_regex = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
+  C1_time.forEach((time) => {
+    if (time !== "") {
+      if (!time_regex.test(time)) {
+        throw new Error("Invalid Time Format");
+      }
     }
-  })
-  C2_time.forEach((time)=> {
-    if(!time_regex.test(time)) {
-      throw new Error("Invalid Time Format");
+  });
+
+  C2_time.forEach((time) => {
+    if (time !== "") {
+      if (!time_regex.test(time)) {
+        throw new Error("Invalid Time Format");
+      }
     }
-  })
-  C3_time.forEach((time)=> {
-    if(!time_regex.test(time)) {
-      throw new Error("Invalid Time Format");
+  });
+  C3_time.forEach((time) => {
+    if (time !== "") {
+      if (!time_regex.test(time)) {
+        throw new Error("Invalid Time Format");
+      }
     }
-  })
-  C3_cleanup_time.forEach((time)=> {
-    if(!time_regex.test(time)) {
-      throw new Error("Invalid Time Format");
+  });
+
+  C3_cleanup_time.forEach((time) => {
+    if (time !== "") {
+      if (!time_regex.test(time)) {
+        throw new Error("Invalid Time Format");
+      }
     }
-  })
+  });
 
   let client;
   let result = null;
