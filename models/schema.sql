@@ -1,47 +1,37 @@
 CREATE DATABASE esc_db;
 
-CREATE TABLE EXCO (
-    user_id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL,
-    outstanding_epf INT 
-);
+CREATE DATABASE esc_db_test;
 
-CREATE TABLE OSL (
-    user_id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL,
-    outstanding_epf INT 
-);
-
-CREATE TABLE ROOT (
-    user_id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL,
-    outstanding_epf INT 
+CREATE TABLE users(
+    user_id VARCHAR PRIMARY KEY NOT NULL,
+    name VARCHAR NOT NULL,
+    email VARCHAR NOT NULL,
+    user_type VARCHAR NOT NULL,
+    outstanding_epf INT,
+    is_deleted BOOLEAN DEFAULT false
 );
 
 CREATE TABLE epfs (
     epf_id SERIAL PRIMARY KEY,
-    status VARCHAR(50), 
-    exco_user_id INT,
+    status VARCHAR, 
+    exco_user_id VARCHAR,
     date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    a_name VARCHAR(50),
+    a_name VARCHAR,
     a_student_id INT,
-    a_organisation VARCHAR(50),
+    a_organisation VARCHAR,
     a_contact_number INT,
-    a_email VARCHAR(50),
-    a_comments_osl VARCHAR(50),
-    a_comments_root VARCHAR(50),
+    a_email VARCHAR,
+    a_comments_osl VARCHAR,
+    a_comments_root VARCHAR,
 
-    b_event_name VARCHAR(50),
-    b_target_audience VARCHAR(50),
-    b_event_schedule TIMESTAMP,
+    b_event_name VARCHAR,
+    b_target_audience VARCHAR,
+    b_event_schedule VARCHAR,
     b_expected_turnout INT,
-    b_event_objective VARCHAR(300),
-    b_comments_osl VARCHAR(300),
-    b_comments_root VARCHAR(300),
+    b_event_objective VARCHAR,
+    b_comments_osl VARCHAR,
+    b_comments_root VARCHAR,
 
     c1_date TEXT[],
     c1_time TEXT[],
@@ -62,83 +52,87 @@ CREATE TABLE epfs (
     c3_cleanup_time TEXT[],
     c3_cleanup_activity_and_description TEXT[],
     c3_cleanup_venue TEXT[],
-    c_comments_osl VARCHAR(1000),
-    c_comments_root VARCHAR(1000),
+    c_comments_osl VARCHAR,
+    c_comments_root VARCHAR,
 
-    d1a_club_income_fund MONEY,
-    d1a_osl_seed_fund MONEY,
-    d1a_donation MONEY,
-    d1b_revenue MONEY,
-    d1b_donation_or_scholarship MONEY,
-    d1b_total_source_of_funds MONEY,
+    d1a_club_income_fund DECIMAL(10,2),
+    d1a_osl_seed_fund DECIMAL(10,2),
+    d1a_donation DECIMAL(10,2),
+    d1b_revenue DECIMAL(10,2),
+    d1b_donation_or_scholarship DECIMAL(10,2),
+    d1b_total_source_of_funds DECIMAL(10,2),
 
     d11_items_goods_services TEXT[],
     d11_price TEXT[],
     d11_quantity TEXT[],
     d11_amount TEXT[],
-    d11_total_revenue MONEY,
+    d11_total_revenue DECIMAL(10,2),
 
     d2_items TEXT[],
     d2_reason_for_purchase TEXT[],
     d2_venue TEXT[],
-    d2_total_expenditure MONEY,
-    d_comments_osl VARCHAR(300),
-    d_comments_root VARCHAR(300),
+    d2_total_expenditure DECIMAL(10,2),
+    d_comments_osl VARCHAR,
+    d_comments_root VARCHAR,
 
     e_personal_data INT,
-    e_comments_osl VARCHAR(50),
-    e_comments_root VARCHAR(50),
+    e_comments_osl VARCHAR,
+    e_comments_root VARCHAR,
 
     f_name TEXT[],
     f_student_id TEXT[],
     f_position TEXT[],
-    f_comments_osl VARCHAR(50),
-    f_comments_root VARCHAR(50),
+    f_comments_osl VARCHAR,
+    f_comments_root VARCHAR,
 
-    g_1_1 VARCHAR(100),
-    g_1_2 VARCHAR(100),
-    g_1_3 VARCHAR(100),
+    g_1_1 VARCHAR,
+    g_1_2 VARCHAR,
+    g_1_3 VARCHAR,
     
-    g_2_1 VARCHAR(100),
-    g_2_2 VARCHAR(100),
-    g_2_3 VARCHAR(100),
+    g_2_1 VARCHAR,
+    g_2_2 VARCHAR,
+    g_2_3 VARCHAR,
 
-    g_3_1 VARCHAR(100),
-    g_3_2 VARCHAR(100),
-    g_3_3 VARCHAR(100),
+    g_3_1 VARCHAR,
+    g_3_2 VARCHAR,
+    g_3_3 VARCHAR,
 
-    g_4_1 VARCHAR(100),
-    g_4_2 VARCHAR(100),
-    g_4_3 VARCHAR(100),
+    g_4_1 VARCHAR,
+    g_4_2 VARCHAR,
+    g_4_3 VARCHAR,
 
-    g_5_1 VARCHAR(100),
-    g_5_2 VARCHAR(100),
-    g_5_3 VARCHAR(100),
+    g_5_1 VARCHAR,
+    g_5_2 VARCHAR,
+    g_5_3 VARCHAR,
 
-    g_6_1 VARCHAR(100),
-    g_6_2 VARCHAR(100),
-    g_6_3 VARCHAR(100),
+    g_6_1 VARCHAR,
+    g_6_2 VARCHAR,
+    g_6_3 VARCHAR,
 
-    g_7_1 VARCHAR(100),
-    g_7_2 VARCHAR(100),
-    g_7_3 VARCHAR(100),
-    g_comments_osl VARCHAR(300),
-    g_comments_root VARCHAR(300),
+    g_7_1 VARCHAR,
+    g_7_2 VARCHAR,
+    g_7_3 VARCHAR,
+    g_comments_osl VARCHAR,
+    g_comments_root VARCHAR,
+
+    is_deleted BOOLEAN DEFAULT false,
 
     CONSTRAINT fk_exco
         FOREIGN KEY(exco_user_id)
-            REFERENCES exco(user_id)
+            REFERENCES users(user_id) 
 );
 
 CREATE TABLE FILES (
     file_id SERIAL PRIMARY KEY,
     epf_id INT NOT NULL,
-    file_name VARCHAR(300) NOT NULL,
+    file_name VARCHAR NOT NULL,
     file_data BYTEA NOT NULL,
+
+    is_deleted BOOLEAN DEFAULT false,
 
     CONSTRAINT fk_epf
         FOREIGN KEY(epf_id)
-            REFERENCES EPFS(epf_id) ON DELETE CASCADE 
+            REFERENCES EPFS(epf_id) 
 );
 
 

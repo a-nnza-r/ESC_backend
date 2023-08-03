@@ -8,21 +8,26 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 import {
-  count_outstanding_EPF,
+  update_outstanding_EPF_count,
   createEPF,
   getEPF,
   getEPFs,
   updateEPF,
   deleteEPF,
-  getEPFbyAttrbute,
 } from "../models/epf_db.js";
+import { 
+  validateJSON_createEPF, 
+  validateJSON_updateEPF, 
+  validateParam_getEPF, 
+  validateParam_deleteEPF 
+} from "../middleware/validationMiddleware_EPF.js";
 const router = express.Router();
 
-router.post("/createEPF", async (req, res) => {
+router.post("/createEPF", validateJSON_createEPF, async (req, res) => {
   const data = req.body;
 
   try {
-    const epf_id = await createEPF(
+    const { created_EPF, epf_count } = await createEPF(
       data["status"],
       data["exco_user_id"],
       data["a_name"],
@@ -106,20 +111,20 @@ router.post("/createEPF", async (req, res) => {
       data["g_comments_osl"],
       data["g_comments_root"]
     );
-    const outstanding_EPF_count = await count_outstanding_EPF();
+
     res
       .status(201)
-      .send(`Created EPF, Outstanding EPF Count: ${outstanding_EPF_count}`);
+      .send(`Created EPF. Current user has ${epf_count} EPFs outstanding`);
   } catch (err) {
     console.log("Failed to create EPF.", err);
     res.status(500).send("Failed to create EPF.");
   }
 });
 
-router.get("/getEPF", async (req, res) => {
+router.get("/getEPF", validateParam_getEPF, async (req, res) => {
   try {
     const data = req.query;
-    const result = await getEPF(data.epf_id);
+    const result = await getEPF(parseInt(data.epf_id));
     if (result === null) {
       res.status(404).send("No EPFs found for the given EPF id");
     } else {
@@ -134,14 +139,18 @@ router.get("/getEPF", async (req, res) => {
 router.get("/getEPFs", async (req, res) => {
   try {
     const result = await getEPFs();
-    res.status(200).send(result);
+    if (result === null) {
+      res.status(404).send("No EPFs found !");
+    } else {
+      res.status(200).send(result);
+    }
   } catch (err) {
     console.error(err);
     res.status(500).send("Server Error");
   }
 });
 
-router.put("/updateEPF", async (req, res) => {
+router.put("/updateEPF", validateJSON_updateEPF, async (req, res) => {
   const data = req.body;
   try {
     const updateCheck = await updateEPF(
@@ -230,11 +239,9 @@ router.put("/updateEPF", async (req, res) => {
       data["g_comments_root"]
     );
 
-    if (updateCheck > 0) {
-      const outstanding_EPF_count = await count_outstanding_EPF();
-      res
-        .status(200)
-        .send(`Updated EPF, Outstanding EPF Count: ${outstanding_EPF_count}`);
+    if (updateCheck["epf_id"] == data["epf_id"]) {
+      await update_outstanding_EPF_count();
+      res.status(200).send(`Updated EPF`);
     } else {
       res.status(400).send("EPF not found or could not update");
     }
@@ -244,39 +251,18 @@ router.put("/updateEPF", async (req, res) => {
   }
 });
 
-router.delete("/deleteEPF", async (req, res) => {
-  const data = req.body;
+router.delete("/deleteEPF", validateParam_deleteEPF, async (req, res) => {
+  const data = req.query;
   try {
-    const deletedEPF = await deleteEPF(data["epf_id"]);
-    if (deletedEPF > 0) {
-      const outstanding_EPF_count = await count_outstanding_EPF();
-      res
-        .status(200)
-        .send(`Deleted EPF, Outstanding EPF Count: ${outstanding_EPF_count}`);
+    const deletedEPF = await deleteEPF(parseInt(data.epf_id));
+    if (deletedEPF["epf_id"] == data.epf_id) {
+      await update_outstanding_EPF_count();
+      res.status(200).send(`Deleted EPF`);
     } else {
       res.status(404).send("EPF not found or could not delete");
     }
   } catch (err) {
     console.error(err);
-    res.status(500).send("Server Error");
-  }
-});
-
-// this End point is essentially does the task of an get request
-// however since the query for specific type of user can be rather complicated
-// we use a post request that enables the use of JSON body data to be passed as part
-// of the request.
-router.post("/getEPFbyAttribute", async (req, res) => {
-  try {
-    const data = req.body;
-    const result = await getEPFbyAttrbute(data);
-    if (result === null) {
-      res.status(404).send("No EPFs found for the given attributes");
-    } else {
-      res.status(200).send(result);
-    }
-  } catch (err) {
-    console.log(err);
     res.status(500).send("Server Error");
   }
 });

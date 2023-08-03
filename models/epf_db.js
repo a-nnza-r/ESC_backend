@@ -1,41 +1,139 @@
-/*
-Logic for EPF DB
-*/
-import pg from "pg";
-import dotenv from "dotenv";
-dotenv.config();
-const { Pool } = pg;
+import { db_pool } from "./db_utils.js";
 
-const credentials = {
-  host: process.env.HOST,
-  user: process.env.USER,
-  port: process.env.PORT,
-  password: process.env.PASSWORD,
-  database: process.env.DATABASE,
+const epf_db_datatypes_create = {
+  status: "string",
+  exco_user_id: "string",
+  a_name: "string",
+  a_student_id: "number",
+  a_organisation: "string",
+  a_contact_number: "number",
+  a_email: "string",
+  a_comments_osl: "string",
+  a_comments_root: "string",
+  b_event_name: "string",
+  b_target_audience: "string",
+  b_event_schedule: "string",
+  b_expected_turnout: "number",
+  b_event_objective: "string",
+  b_comments_osl: "string",
+  b_comments_root: "string",
+  c1_date: "object",
+  c1_time: "object",
+  c1_activity_and_description: "object",
+  c1_venue: "object",
+  c2_date: "object",
+  c2_time: "object",
+  c2_activity_and_description: "object",
+  c2_venue: "object",
+  c3_date: "object",
+  c3_time: "object",
+  c3_activity_and_description: "object",
+  c3_venue: "object",
+  c3_cleanup_date: "object",
+  c3_cleanup_time: "object",
+  c3_cleanup_activity_and_description: "object",
+  c3_cleanup_venue: "object",
+  c_comments_osl: "string",
+  c_comments_root: "string",
+  d1a_club_income_fund: "number",
+  d1a_osl_seed_fund: "number",
+  d1a_donation: "number",
+  d1b_revenue: "number",
+  d1b_donation_or_scholarship: "number",
+  d1b_total_source_of_funds: "number",
+  d11_items_goods_services: "object",
+  d11_price: "object",
+  d11_quantity: "object",
+  d11_amount: "object",
+  d11_total_revenue: "number",
+  d2_items: "object",
+  d2_reason_for_purchase: "object",
+  d2_venue: "object",
+  d2_total_expenditure: "number",
+  d_comments_osl: "string",
+  d_comments_root: "string",
+  e_personal_data: "number",
+  e_comments_osl: "string",
+  e_comments_root: "string",
+  f_name: "object",
+  f_student_id: "object",
+  f_position: "object",
+  f_comments_osl: "string",
+  f_comments_root: "string",
+  g_1_1: "string",
+  g_1_2: "string",
+  g_1_3: "string",
+  g_2_1: "string",
+  g_2_2: "string",
+  g_2_3: "string",
+  g_3_1: "string",
+  g_3_2: "string",
+  g_3_3: "string",
+  g_4_1: "string",
+  g_4_2: "string",
+  g_4_3: "string",
+  g_5_1: "string",
+  g_5_2: "string",
+  g_5_3: "string",
+  g_6_1: "string",
+  g_6_2: "string",
+  g_6_3: "string",
+  g_7_1: "string",
+  g_7_2: "string",
+  g_7_3: "string",
+  g_comments_osl: "string",
+  g_comments_root: "string",
 };
 
-export async function count_outstanding_EPF() {
-  const pool = new Pool(credentials);
-  const result = await pool.query(
-    `SELECT COUNT(*) FROM EPFS WHERE status != $1`,
-    ["Approved"]
-  );
-  await pool.query(`UPDATE EXCO SET outstanding_epf=$1`, [
-    result["rows"][0]["count"],
-  ]);
+var epf_db_datatypes_update = { ...epf_db_datatypes_create };
+epf_db_datatypes_update = { epf_id: "number", ...epf_db_datatypes_create };
 
-  await pool.query(`UPDATE OSL SET outstanding_epf=$1`, [
-    result["rows"][0]["count"],
-  ]);
+const status_types = ['Draft', 'Pending Approval', 'Approved', 'Rejected'];
 
-  await pool.query(`UPDATE ROOT SET outstanding_epf=$1`, [
-    result["rows"][0]["count"],
-  ]);
+export async function update_outstanding_EPF_count(client) {
+  try {
+    const exco_user_ids = await client.query(
+      `SELECT user_id FROM users WHERE user_type=$1 FOR UPDATE`,
+      ["exco"]
+    );
 
-  await pool.end();
+    for (let i in exco_user_ids["rows"]) {
+      const userId = exco_user_ids["rows"][i]["user_id"];
+      let result = await client.query(
+        `SELECT COUNT(*) FROM EPFS WHERE status!=$1 AND exco_user_id=$2 AND is_deleted = false`,
+        ["Approved", userId]
+      );
 
-  //for testing
-  return result["rows"][0]["count"];
+      await client.query(
+        `UPDATE users SET outstanding_epf=$1 WHERE user_id=$2`,
+        [result["rows"][0]["count"], userId]
+      );
+    }
+
+    const total_count = await client.query(
+      `SELECT COUNT(*) FROM EPFS WHERE status != $1 AND is_deleted = false`,
+      ["Approved"]
+    );
+
+    await client.query(
+      `UPDATE users SET outstanding_epf=$1 WHERE user_type!=$2`,
+      [total_count["rows"][0]["count"], "exco"]
+    );
+  } catch (err) {
+    throw err;
+  }
+}
+
+export async function get_outstanding_EPF_count(exco_user_id, client) {
+  try {
+    let result = await client.query(
+      `SELECT COUNT(*) FROM EPFS WHERE status != $1 AND exco_user_id=$2 AND is_deleted = false`,
+      ["Approved", exco_user_id]
+    );
+    return result.rows[0]["count"];
+  } catch (err) {
+    throw err;
+  }
 }
 
 export async function createEPF(
@@ -120,9 +218,9 @@ export async function createEPF(
   G_7_2,
   G_7_3,
   G_comments_OSL,
-  G_comments_ROOT
+  G_comments_ROOT,
+  pool = db_pool
 ) {
-  const pool = new Pool(credentials);
   const columnParams = new Array(82)
     .fill()
     .map((_, i) => `$${i + 1}`)
@@ -277,28 +375,296 @@ export async function createEPF(
     sectionG7
   );
 
-  const query = `INSERT INTO EPFS(${column_names}) VALUES (${columnParams}) RETURNING epf_id`;
-  const new_epf_id = await pool.query(query, values);
-  await pool.end();
-  return new_epf_id["rows"][0]["epf_id"];
+  const datatypes = Object.values(epf_db_datatypes_create);
+
+  for (let i = 0; i < values.length; i++) {
+    if (typeof values[i] !== datatypes[i]) {
+      throw new Error("Unexpected data type");
+    }
+  }
+
+  //Status validation
+  if(!status_types.includes(status)){
+    throw new Error("Invalid Status Type")
+  }
+
+  //Student ID validation
+  const student_id_regex = /^1\d{6}$/;
+  if(!student_id_regex.test(A_student_id)) {
+    throw new Error("Invalid Student ID")
+  }
+  F_student_id.forEach((student_id) => {
+    if(!student_id_regex.test(parseInt(student_id))) {
+      throw new Error("Invalid Student ID")
+    }
+  })
+
+  //Contact number validation
+  const contact_number_regex = /^[689]\d{7}$/;
+  if(!contact_number_regex.test(A_contact_number)) {
+    throw new Error("Invalid Contact Number")
+  }
+
+  //Email format validation
+  const [username, domain] = A_email.split("@");
+  const isValidUsername = /^[^\s@]+$/;
+  const isValidDomain = /^[^\s@]+\.[^\s@]+$/;
+  if (
+    !A_email.includes("@") ||
+    !isValidUsername.test(username) ||
+    !isValidDomain.test(domain)
+  ) {
+    throw new Error("Invalid email format");
+  }
+
+  //Validation for money
+  if(D1A_club_income_fund < 0 || 
+    D1A_osl_seed_fund < 0 ||
+    D1A_donation < 0 ||
+    D1B_revenue < 0 ||
+    D1B_donation_or_scholarship < 0 ||
+    D1B_total_source_of_funds < 0 ||
+    D11_total_revenue < 0 ||
+    D2_total_expenditure < 0
+    ) {
+      throw new Error("Invalid value for money");
+    }
+  D11_price.forEach((price)=> {
+    if(price<0) {
+      throw new Error("Invalid value for money");
+    }
+  })
+  D11_amount.forEach((price)=> {
+    if(price<0) {
+      throw new Error("Invalid value for money");
+    }
+  })
+  //Validation for Quantity
+  D11_quantity.forEach((price)=> {
+    if(price<0) {
+      throw new Error("Invalid quantity value");
+    }
+  })
+
+  //Check for event name
+  if (B_event_name.trim().length == 0) {
+    throw new Error("Event name missing");
+  }
+
+  //Validation for event schedule
+  const datetime_regex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/
+  if(!datetime_regex.test(B_event_schedule)) {
+    throw new Error("Invalid Datetime Format");
+  }
+
+  //Validation for date
+  const date_regex = /^\d{4}-\d{2}-\d{2}$/
+  C1_date.forEach((date)=> {
+    if(!date_regex.test(date)) {
+      throw new Error("Invalid Date Format");
+    }
+  })
+  C2_date.forEach((date)=> {
+    if(!date_regex.test(date)) {
+      throw new Error("Invalid Date Format");
+    }
+  })
+  C3_date.forEach((date)=> {
+    if(!date_regex.test(date)) {
+      throw new Error("Invalid Date Format");
+    }
+  })
+  C3_cleanup_date.forEach((date)=> {
+    if(!date_regex.test(date)) {
+      throw new Error("Invalid Date Format");
+    }
+  })
+  //Validation for time
+  const time_regex = /^(?:[01]\d|2[0-3]):[0-5]\d$/
+  C1_time.forEach((time)=> {
+    if(!time_regex.test(time)) {
+      throw new Error("Invalid Time Format");
+    }
+  })
+  C2_time.forEach((time)=> {
+    if(!time_regex.test(time)) {
+      throw new Error("Invalid Time Format");
+    }
+  })
+  C3_time.forEach((time)=> {
+    if(!time_regex.test(time)) {
+      throw new Error("Invalid Time Format");
+    }
+  })
+  C3_cleanup_time.forEach((time)=> {
+    if(!time_regex.test(time)) {
+      throw new Error("Invalid Time Format");
+    }
+  })
+
+
+
+
+  let client;
+  let result = null;
+  let epf_count = null;
+  let retryCount = 5;
+  const RETRY_DELAY_MS = 200;
+  while (retryCount > 0) {
+    try {
+      client = await pool.connect();
+      await client.query("BEGIN");
+      await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
+
+      // Check for valid exco_user_id
+      const valid_exco_user_id = await client.query(
+        `SELECT COUNT(*) FROM users WHERE user_id=$1`,
+        [exco_user_id]
+      );
+      if (valid_exco_user_id.rows[0]["count"] == 0) {
+        throw new Error("Non-existent exco user id");
+      }
+
+      const query = `INSERT INTO EPFS(${column_names}) VALUES (${columnParams}) RETURNING *`;
+      result = await client.query(query, values);
+
+      epf_count = await get_outstanding_EPF_count(exco_user_id, client);
+      await update_outstanding_EPF_count(client);
+      await client.query("COMMIT");
+      return { result: result["rows"][0], epf_count: epf_count };
+    } catch (err) {
+      if (err.message === "Non-existent exco user id") {
+        await client.query("COMMIT");
+        throw err;
+      } else {
+        if (client) {
+          await client.query("ROLLBACK");
+          if (
+            err.code === "40001" ||
+            err.message.includes("deadlock detected")
+          ) {
+            // 40001 is the error code for serialization failure
+            retryCount -= 1;
+            await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
+          } else {
+            throw err;
+          }
+        } else new Error("couldnt acquire client");
+      }
+    } finally {
+      if (client) {
+        client.release();
+      }
+    }
+  }
+  if (retryCount <= 0) {
+    throw new Error(
+      "Transaction failed due to serialization error or deadlock after 5 retries"
+    );
+  }
 }
 
-export async function getEPF(epf_id) {
-  const pool = new Pool(credentials);
-  const result = await pool.query("SELECT * FROM EPFS WHERE epf_id=$1", [
-    epf_id,
-  ]);
-  await pool.end();
-  if (result.rowCount === 0) {
+export async function getEPF(epf_id, pool = db_pool) {
+  // Check for epf_id data type
+  if (typeof epf_id !== "number") {
+    throw new Error("Unexpected data type");
+  }
+
+  const MAX_RETRIES = 5;
+  let client;
+  let result = null;
+
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      client = await pool.connect();
+      await client.query("BEGIN");
+      await client.query("SET TRANSACTION ISOLATION LEVEL READ COMMITTED");
+
+      // Check for valid epf_id
+      const valid_epf_id = await client.query(
+        `SELECT COUNT(*) FROM EPFS WHERE epf_id = $1 AND is_deleted = false`,
+        [epf_id]
+      );
+
+      if (valid_epf_id.rows[0]["count"] == 0) {
+        throw new Error("Non-existent epf");
+      }
+
+      result = await client.query(
+        "SELECT * FROM EPFS WHERE epf_id = $1 AND is_deleted = false",
+        [epf_id]
+      );
+
+      await client.query("COMMIT");
+      break; // Break the retry loop upon successful transaction
+    } catch (err) {
+      if (client) {
+        await client.query("ROLLBACK");
+      }
+      if (
+        !err.message.includes("could not serialize access") &&
+        !err.message.includes("deadlock detected")
+      ) {
+        throw err;
+      }
+      if (attempt === MAX_RETRIES - 1) {
+        throw new Error("Max retrieval attempts exceeded");
+      }
+      await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
+    } finally {
+      if (client) {
+        client.release();
+      }
+    }
+  }
+
+  if (result["rows"].length === 0) {
     return null;
   }
   return result["rows"];
 }
 
-export async function getEPFs() {
-  const pool = new Pool(credentials);
-  const result = await pool.query(`SELECT * FROM EPFS`);
-  await pool.end();
+export async function getEPFs(pool = db_pool) {
+  const MAX_RETRIES = 5;
+  let client;
+  let result = null;
+
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      client = await pool.connect();
+      await client.query("BEGIN");
+      await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
+      result = await client.query(
+        `SELECT * FROM EPFS WHERE is_deleted = false`
+      );
+      await client.query("COMMIT");
+      break;
+    } catch (err) {
+      if (client) {
+        await client.query("ROLLBACK");
+      }
+      if (
+        (err.message.includes(
+          "could not serialize access due to read/write dependencies among transactions"
+        ) ||
+          err.message.includes("deadlock detected")) &&
+        attempt < MAX_RETRIES - 1
+      ) {
+        continue;
+      } else {
+        throw err;
+      }
+      await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
+    } finally {
+      if (client) {
+        client.release();
+      }
+    }
+  }
+
+  if (result["rows"].length === 0) {
+    return null;
+  }
   return result["rows"];
 }
 
@@ -385,9 +751,10 @@ export async function updateEPF(
   G_7_2,
   G_7_3,
   G_comments_OSL,
-  G_comments_ROOT
+  G_comments_ROOT,
+
+  pool = db_pool
 ) {
-  const pool = new Pool(credentials);
   const columnNames =
     "status,exco_user_id,a_name,a_student_id,a_organisation,a_contact_number,a_email,a_comments_osl,a_comments_root,b_event_name,b_target_audience,b_event_schedule,b_expected_turnout,b_event_objective,b_comments_osl,b_comments_root,c1_date,c1_time,c1_activity_and_description,c1_venue,c2_date,c2_time,c2_activity_and_description,c2_venue,c3_date,c3_time,c3_activity_and_description,c3_venue,c3_cleanup_date,c3_cleanup_time,c3_cleanup_activity_and_description,c3_cleanup_venue,c_comments_osl,c_comments_root,d1a_club_income_fund,d1a_osl_seed_fund,d1a_donation,d1b_revenue,d1b_donation_or_scholarship,d1b_total_source_of_funds,d11_items_goods_services,d11_price,d11_quantity,d11_amount,d11_total_revenue,d2_items,d2_reason_for_purchase,d2_venue,d2_total_expenditure,d_comments_osl,d_comments_root,e_personal_data,e_comments_osl,e_comments_root,f_name,f_student_id,f_position,f_comments_osl,f_comments_root,g_1_1,g_1_2,g_1_3,g_2_1,g_2_2,g_2_3,g_3_1,g_3_2,g_3_3,g_4_1,g_4_2,g_4_3,g_5_1,g_5_2,g_5_3,g_6_1,g_6_2,g_6_3,g_7_1,g_7_2,g_7_3,g_comments_osl,g_comments_root";
   const columnParams = columnNames
@@ -480,65 +847,240 @@ export async function updateEPF(
     G_comments_ROOT,
   ];
 
-  const query = `UPDATE EPFS SET (${columnNames}) = (${columnParams}) WHERE epf_id=$1`;
-  let result = await pool.query(query, values);
-  await pool.end();
-  return result.rowCount;
-}
+  const datatypes = Object.values(epf_db_datatypes_update);
 
-export async function deleteEPF(epf_id) {
-  const pool = new Pool(credentials);
-  const query = "DELETE FROM EPFS WHERE epf_id=$1";
-  const result = await pool.query(query, [epf_id]);
-  await pool.end();
-  return result.rowCount;
-}
-
-export async function getEPFbyAttrbute(attributes) {
-  const pool = new Pool(credentials);
-
-  const keys = Object.keys(attributes).filter((key) => key !== "sort");
-
-  // Check for required properties in attribute objects
-  for (const key of keys) {
-    if (
-      !attributes[key].hasOwnProperty("value") ||
-      !attributes[key].hasOwnProperty("operator")
-    ) {
-      throw new Error(
-        `Attribute "${key}" must have "value" and "operator" properties`
-      );
+  for (let i = 0; i < values.length; i++) {
+    if (typeof values[i] !== datatypes[i]) {
+      throw new Error("Unexpected data type");
     }
   }
 
-  const conditions = keys.map(
-    (key, index) => `${key}${attributes[key].operator}$${index + 1}`
-  );
+  //Status validation
+  if(!status_types.includes(status)){
+    throw new Error("Invalid Status Type")
+  }
 
-  const values = keys.map((key) => attributes[key].value);
-
-  let query = `SELECT * FROM EPFS WHERE ${conditions.join(" AND ")}`;
-
-  if (attributes.sort) {
-    // Additional check for required properties in "sort" attribute
-    if (
-      !attributes.sort.hasOwnProperty("column") ||
-      !attributes.sort.hasOwnProperty("direction")
-    ) {
-      throw new Error(
-        `Sort property must have "column" and "direction" properties`
-      );
+  //Student ID validation
+  const student_id_regex = /^1\d{6}$/;
+  if(!student_id_regex.test(A_student_id)) {
+    throw new Error("Invalid Student ID")
+  }
+  F_student_id.forEach((student_id) => {
+    if(!student_id_regex.test(parseInt(student_id))) {
+      throw new Error("Invalid Student ID")
     }
-    query += ` ORDER BY ${attributes.sort.column} ${attributes.sort.direction}`;
+  })
+
+  //Contact number validation
+  const contact_number_regex = /^[689]\d{7}$/;
+  if(!contact_number_regex.test(A_contact_number)) {
+    throw new Error("Invalid Contact Number")
   }
 
-  const result = await pool.query(query, values);
-
-  await pool.end();
-
-  if (result.rowCount === 0) {
-    return null;
+  //Email format validation
+  const [username, domain] = A_email.split("@");
+  const isValidUsername = /^[^\s@]+$/;
+  const isValidDomain = /^[^\s@]+\.[^\s@]+$/;
+  if (
+    !A_email.includes("@") ||
+    !isValidUsername.test(username) ||
+    !isValidDomain.test(domain)
+  ) {
+    throw new Error("Invalid email format");
   }
 
-  return result["rows"];
+  //Validation for money
+  if(D1A_club_income_fund < 0 || 
+    D1A_osl_seed_fund < 0 ||
+    D1A_donation < 0 ||
+    D1B_revenue < 0 ||
+    D1B_donation_or_scholarship < 0 ||
+    D1B_total_source_of_funds < 0 ||
+    D11_total_revenue < 0 ||
+    D2_total_expenditure < 0
+    ) {
+      throw new Error("Invalid value for money");
+    }
+  D11_price.forEach((price)=> {
+    if(price<0) {
+      throw new Error("Invalid value for money");
+    }
+  })
+  D11_amount.forEach((price)=> {
+    if(price<0) {
+      throw new Error("Invalid value for money");
+    }
+  })
+  //Validation for Quantity
+  D11_quantity.forEach((price)=> {
+    if(price<0) {
+      throw new Error("Invalid quantity value");
+    }
+  })
+
+  //Check for event name
+  if (B_event_name.trim().length == 0) {
+    throw new Error("Event name missing");
+  }
+
+  //Validation for event schedule
+  const datetime_regex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/
+  if(!datetime_regex.test(B_event_schedule)) {
+    throw new Error("Invalid Datetime Format");
+  }
+
+  //Validation for date
+  const date_regex = /^\d{4}-\d{2}-\d{2}$/
+  C1_date.forEach((date)=> {
+    if(!date_regex.test(date)) {
+      throw new Error("Invalid Date Format");
+    }
+  })
+  C2_date.forEach((date)=> {
+    if(!date_regex.test(date)) {
+      throw new Error("Invalid Date Format");
+    }
+  })
+  C3_date.forEach((date)=> {
+    if(!date_regex.test(date)) {
+      throw new Error("Invalid Date Format");
+    }
+  })
+  C3_cleanup_date.forEach((date)=> {
+    if(!date_regex.test(date)) {
+      throw new Error("Invalid Date Format");
+    }
+  })
+  //Validation for time
+  const time_regex = /^(?:[01]\d|2[0-3]):[0-5]\d$/
+  C1_time.forEach((time)=> {
+    if(!time_regex.test(time)) {
+      throw new Error("Invalid Time Format");
+    }
+  })
+  C2_time.forEach((time)=> {
+    if(!time_regex.test(time)) {
+      throw new Error("Invalid Time Format");
+    }
+  })
+  C3_time.forEach((time)=> {
+    if(!time_regex.test(time)) {
+      throw new Error("Invalid Time Format");
+    }
+  })
+  C3_cleanup_time.forEach((time)=> {
+    if(!time_regex.test(time)) {
+      throw new Error("Invalid Time Format");
+    }
+  })
+
+  let client;
+  let result = null;
+  const MAX_RETRIES = 5;
+
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      client = await pool.connect();
+      await client.query("BEGIN");
+      await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
+
+      // Check for valid epf_id and exco_user_id
+      const idsToCheck = {
+        epf_id: ["EPFS", "epf_id", epf_id],
+        exco_user_id: ["users", "user_id", exco_user_id],
+      };
+
+      for (let id in idsToCheck) {
+        const res = await client.query(
+          `SELECT COUNT(*) FROM ${idsToCheck[id][0]} WHERE ${idsToCheck[id][1]}=$1`,
+          [idsToCheck[id][2]]
+        );
+        if (res.rows[0]["count"] == 0) {
+          throw new Error(`Non-existent ${id}`);
+        }
+      }
+      const query = `UPDATE EPFS SET (${columnNames}) = (${columnParams}) WHERE epf_id=$1 AND is_deleted = false RETURNING *`;
+      result = await client.query(query, values);
+      await update_outstanding_EPF_count(client);
+      await client.query("COMMIT");
+      break;
+    } catch (err) {
+      if (client) {
+        await client.query("ROLLBACK");
+      }
+      if (
+        !(
+          err.message.includes("could not serialize access") ||
+          err.message.includes("deadlock detected")
+        )
+      ) {
+        throw err;
+      }
+      if (attempt === MAX_RETRIES - 1) {
+        throw new Error("Max update attempts exceeded");
+      }
+    } finally {
+      if (client) {
+        client.release();
+      }
+    }
+  }
+  return result.rows[0];
+}
+
+export async function deleteEPF(epf_id, pool = db_pool) {
+  // Check for epf_id data type
+  if (typeof epf_id !== "number") {
+    throw new Error("Unexpected data type");
+  }
+
+  const MAX_RETRIES = 5;
+  let client;
+  let result = null;
+
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      client = await pool.connect();
+      await client.query("BEGIN");
+      await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
+
+      // Check for valid epf_id
+      const valid_epf_id = await client.query(
+        `SELECT COUNT(*) FROM EPFS WHERE epf_id=$1 AND is_deleted = false`,
+        [epf_id]
+      );
+      if (valid_epf_id.rows[0]["count"] == 0) {
+        throw new Error("Non-existent epf");
+      }
+
+      const query =
+        "UPDATE EPFS SET is_deleted = true WHERE epf_id = $1 AND is_deleted = false RETURNING epf_id";
+      result = await client.query(query, [epf_id]);
+      await client.query(
+        `UPDATE FILES SET is_deleted = true WHERE epf_id = $1 AND is_deleted = false`,
+        [epf_id]
+      );
+      await update_outstanding_EPF_count(client);
+      await client.query("COMMIT");
+      break; // Breaks the loop if the transaction is successful
+    } catch (err) {
+      if (client) {
+        await client.query("ROLLBACK");
+      }
+      if (
+        !err.message.includes("could not serialize access") &&
+        !err.message.includes("deadlock detected")
+      ) {
+        throw err;
+      }
+      if (attempt === MAX_RETRIES - 1) {
+        throw new Error("Max delete attempts exceeded");
+      }
+    } finally {
+      if (client) {
+        client.release();
+      }
+    }
+  }
+  return result.rows[0];
 }
