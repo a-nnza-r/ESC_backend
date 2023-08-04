@@ -5,6 +5,7 @@
   "type": "module",
   "main": "server.js",
   "scripts": {
+    "start": "server.js",
     "test": "jest --runInBand"
   },
   "keywords": [],

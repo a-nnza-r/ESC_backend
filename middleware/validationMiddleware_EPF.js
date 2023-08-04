@@ -199,8 +199,8 @@ export function validateJSON_updateEPF(req, res, next) {
 
   try {
     const incomingKeys_updateEPF = Object.keys(req.body);
-    const isPayloadValid = expectedKeys.every((key) =>
-      incomingKeys_updateEPF.includes(key)
+    const isPayloadValid = incomingKeys_updateEPF.every((key) =>
+      expectedKeys.includes(key)
     );
     if (!isPayloadValid) {
       return res
