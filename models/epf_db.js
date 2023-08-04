@@ -1067,7 +1067,7 @@ export async function updateEPF(
 
       for (let id in idsToCheck) {
         const res = await client.query(
-          `SELECT COUNT(*) FROM ${idsToCheck[id][0]} WHERE ${idsToCheck[id][1]}=$1`,
+          `SELECT COUNT(*) FROM ${idsToCheck[id][0]} WHERE ${idsToCheck[id][1]}=$1 AND is_deleted = false`,
           [idsToCheck[id][2]]
         );
         if (res.rows[0]["count"] == 0) {
