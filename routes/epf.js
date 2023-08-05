@@ -238,6 +238,7 @@ router.put("/updateEPF", validateJSON_updateEPF, async (req, res) => {
       data["g_comments_osl"],
       data["g_comments_root"]
     );
+
     if (updateCheck["epf_id"] == data["epf_id"]) {
       res.status(200).send(`Updated EPF`);
     } else {
