@@ -40,9 +40,8 @@ export async function createUser(user_id, name, email, type, pool = db_pool) {
       await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
 
       const duplicateCheckQuery =
-        "SELECT * FROM users WHERE user_id = $1 AND name = $2 AND email = $3 AND user_type = $4 FOR UPDATE";
+        "SELECT * FROM users WHERE name = $1 AND email = $2 AND user_type = $3 FOR UPDATE";
       const duplicateResult = await client.query(duplicateCheckQuery, [
-        user_id,
         name,
         email,
         type,
