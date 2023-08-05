@@ -1,6 +1,6 @@
 {
   "epf_id": 1,
-  "status": "Pending",
+  "status": "Pending Approval",
   "exco_user_id": "1",
   "a_name": "user 1",
   "a_student_id": 1000001,
@@ -55,7 +55,7 @@
   "d11_items_goods_services": ["item 1", "item 2"],
   "d11_price": [22.0, 23.0],
   "d11_quantity": [1.0, 2.0],
-  "d11_amount": [22.0, 46.0],
+  "d11_amount": [-1, 46.0],
   "d11_total_revenue": 23.23,
   "d2_items": ["item 1", "item 2"],
   "d2_reason_for_purchase": ["reason 1", "reason 2"],

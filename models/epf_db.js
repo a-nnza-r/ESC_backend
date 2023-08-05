@@ -625,10 +625,6 @@ export async function getEPF(epf_id, pool = db_pool) {
       }
     }
   }
-
-  if (result["rows"].length === 0) {
-    return null;
-  }
   return result["rows"];
 }
 
@@ -658,11 +654,14 @@ export async function getEPFs(pool = db_pool) {
           err.message.includes("deadlock detected")) &&
         attempt < MAX_RETRIES - 1
       ) {
+        if (client) {
+          client.release();
+        }
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
         continue;
       } else {
         throw err;
       }
-      await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
     } finally {
       if (client) {
         client.release();
@@ -945,7 +944,7 @@ export async function updateEPF(
     D11_amount.forEach((price) => {
       if (price !== "") {
         if (price < 0) {
-          throw new Error("Invalid value for money");
+          throw new Error("Invalid value for amount");
         }
       }
     });
@@ -1009,7 +1008,7 @@ export async function updateEPF(
     });
   }
 
-  if (C3_cleanup_date) {
+  if (C3_cleanup_date !== undefined) {
     C3_cleanup_date.forEach((date) => {
       if (date !== "") {
         if (!date_regex.test(date)) {

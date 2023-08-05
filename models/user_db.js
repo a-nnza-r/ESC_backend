@@ -59,17 +59,19 @@ export async function createUser(user_id, name, email, type, pool = db_pool) {
       break;
     } catch (err) {
       if (client) {
-        await client.query("ROLLBACK");
-      }
-      if (
-        !err.message.includes("could not serialize access") &&
-        !err.message.includes("deadlock detected")
-      ) {
-        throw err;
+        if (
+          !(
+            err.message.includes("could not serialize access") ||
+            err.message.includes("deadlock detected")
+          )
+        ) {
+          throw err;
+        }
       }
       if (attempt === MAX_RETRIES - 1) {
-        throw new Error("Max update attempts exceeded");
+        throw new Error("Max retrieval attempts exceeded");
       }
+      await client.query("ROLLBACK");
     } finally {
       if (client) {
         client.release();
