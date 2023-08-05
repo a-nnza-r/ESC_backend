@@ -629,43 +629,23 @@ export async function getEPF(epf_id, pool = db_pool) {
 }
 
 export async function getEPFs(pool = db_pool) {
-  const MAX_RETRIES = 5;
   let client;
   let result = null;
 
-  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    try {
-      client = await pool.connect();
-      await client.query("BEGIN");
-      await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
-      result = await client.query(
-        `SELECT * FROM EPFS WHERE is_deleted = false`
-      );
-      await client.query("COMMIT");
-      break;
-    } catch (err) {
-      if (client) {
-        await client.query("ROLLBACK");
-      }
-      if (
-        (err.message.includes(
-          "could not serialize access due to read/write dependencies among transactions"
-        ) ||
-          err.message.includes("deadlock detected")) &&
-        attempt < MAX_RETRIES - 1
-      ) {
-        if (client) {
-          client.release();
-        }
-        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
-        continue;
-      } else {
-        throw err;
-      }
-    } finally {
-      if (client) {
-        client.release();
-      }
+  try {
+    client = await pool.connect();
+    await client.query("BEGIN");
+    await client.query("SET TRANSACTION ISOLATION LEVEL READ COMMITTED");
+    result = await client.query("SELECT * FROM EPFS WHERE is_deleted = false");
+    await client.query("COMMIT");
+  } catch (err) {
+    if (client) {
+      await client.query("ROLLBACK");
+    }
+    throw err;
+  } finally {
+    if (client) {
+      client.release();
     }
   }
 
