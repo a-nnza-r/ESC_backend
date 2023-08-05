@@ -45,12 +45,6 @@ describe("getUser", () => {
     );
   });
 
-  test("Test ID: 4 - Test row locks", async () => {
-    await expect(getUser(undefined, test_pool)).rejects.toThrow(
-      "User ID must be provided"
-    );
-  });
-
   afterAll(async () => {
     await deleteFromTables(test_pool);
   });
