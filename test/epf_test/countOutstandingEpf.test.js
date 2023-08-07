@@ -17,42 +17,42 @@ describe("update outstanding EPF test", () => {
       "UPOUT1",
       "name 1",
       "name_1@mymail.sutd.edu.sg",
-      "exco",
+      "FRE",
       test_pool
     );
     await createUser(
       "UPOUT2",
       "name 2",
       "name_2@mymail.sutd.edu.sg",
-      "exco",
+      "FRE",
       test_pool
     );
     await createUser(
       "UPOUT3",
       "name 3",
       "name_3@mymail.sutd.edu.sg",
-      "osl",
+      "OSL",
       test_pool
     );
     await createUser(
       "UPOUT4",
       "name 4",
       "name_4@mymail.sutd.edu.sg",
-      "osl",
+      "OSL",
       test_pool
     );
     await createUser(
       "UPOUT5",
       "name 5",
       "name_5@mymail.sutd.edu.sg",
-      "root",
+      "ROOT",
       test_pool
     );
     await createUser(
       "UPOUT6",
       "name 6",
       "name_6@mymail.sutd.edu.sg",
-      "root",
+      "ROOT",
       test_pool
     );
   });
@@ -437,11 +437,11 @@ describe("update outstanding EPF test", () => {
       );
 
       result_OSL = await client.query(
-        `SELECT outstanding_epf FROM users WHERE user_type='osl'`
+        `SELECT outstanding_epf FROM users WHERE user_type='OSL'`
       );
 
       result_ROOT = await client.query(
-        `SELECT outstanding_epf FROM users WHERE user_type='root'`
+        `SELECT outstanding_epf FROM users WHERE user_type='ROOT'`
       );
       await client.query("COMMIT");
     } catch (err) {

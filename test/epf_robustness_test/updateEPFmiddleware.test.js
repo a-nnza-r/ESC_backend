@@ -38,7 +38,7 @@ describe("Robustness/Fuzzy testing of updateEPF API", () => {
     expect(res.json).not.toHaveBeenCalled();
   });
 
-  test("Test ID 3: Return 400 error when payload is invalid", () => {
+  test("Test ID 2: Return 400 error when payload is invalid", () => {
     const randomBytesData = randomBytes(100);
     const req = mockRequest(randomBytesData);
     const res = mockResponse();

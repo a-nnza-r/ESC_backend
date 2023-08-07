@@ -12,7 +12,7 @@ describe("getEPF", () => {
       "1",
       "name 1",
       "name_1@mymail.sutd.edu.sg",
-      "exco",
+      "FRE",
       test_pool
     );
   });

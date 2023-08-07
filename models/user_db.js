@@ -14,8 +14,8 @@ export async function createUser(user_id, name, email, type, pool = db_pool) {
   }
 
   // Type validation
-  if (!type || !(type === "root" || type === "osl" || type === "exco")) {
-    throw new Error("Invalid user type. Must be 'root', 'osl', or 'exco'");
+  if (!type || !(type === "ROOT" || type === "OSL" || type === "FRE")) {
+    throw new Error("Invalid user type. Must be 'ROOT', 'OSL', or 'FRE'");
   }
 
   // Email format validation

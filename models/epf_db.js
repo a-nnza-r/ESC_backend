@@ -94,7 +94,7 @@ export async function update_outstanding_EPF_count(client) {
   try {
     const exco_user_ids = await client.query(
       `SELECT user_id FROM users WHERE user_type=$1 FOR UPDATE`,
-      ["exco"]
+      ["FRE"]
     );
 
     for (let i in exco_user_ids["rows"]) {
@@ -117,7 +117,7 @@ export async function update_outstanding_EPF_count(client) {
 
     await client.query(
       `UPDATE users SET outstanding_epf=$1 WHERE user_type!=$2`,
-      [total_count["rows"][0]["count"], "exco"]
+      [total_count["rows"][0]["count"], "FRE"]
     );
   } catch (err) {
     throw err;
