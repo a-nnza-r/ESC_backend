@@ -5,8 +5,6 @@ import { test_pool, deleteFromUsers, deleteFromEPFs } from "./epf_test_utils";
 import path from "path";
 import fs from "fs";
 
-let pool;
-
 describe("getEPF", () => {
   beforeAll(async () => {
     await deleteFromUsers(test_pool);
@@ -14,7 +12,7 @@ describe("getEPF", () => {
       "1",
       "name 1",
       "name_1@mymail.sutd.edu.sg",
-      "exco",
+      "FRE",
       test_pool
     );
   });

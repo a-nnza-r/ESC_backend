@@ -1,4 +1,5 @@
 {
+  "epf_id": 1,
   "status": "Pending Approval",
   "exco_user_id": "1",
   "a_name": "user 1",
@@ -22,7 +23,7 @@
     "activity 2 description 2"
   ],
   "c1_venue": ["venue 1", "venue 2"],
-  "c2_date": ["2023-06-21", "2023-06-22"],
+  "c2_date": ["2023-0621", "2023-06-22"],
   "c2_time": ["16:49", "16:50"],
   "c2_activity_and_description": [
     "activity 1 description 1",
@@ -54,7 +55,7 @@
   "d11_items_goods_services": ["item 1", "item 2"],
   "d11_price": [22.0, 23.0],
   "d11_quantity": [1.0, 2.0],
-  "d11_amount": [22.0, 46.0],
+  "d11_amount": [1, 46.0],
   "d11_total_revenue": 23.23,
   "d2_items": ["item 1", "item 2"],
   "d2_reason_for_purchase": ["reason 1", "reason 2"],

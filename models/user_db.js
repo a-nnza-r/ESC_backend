@@ -14,8 +14,8 @@ export async function createUser(user_id, name, email, type, pool = db_pool) {
   }
 
   // Type validation
-  if (!type || !(type === "root" || type === "osl" || type === "exco")) {
-    throw new Error("Invalid user type. Must be 'root', 'osl', or 'exco'");
+  if (!type || !(type === "ROOT" || type === "OSL" || type === "FRE")) {
+    throw new Error("Invalid user type. Must be 'ROOT', 'OSL', or 'FRE'");
   }
 
   // Email format validation
@@ -40,9 +40,8 @@ export async function createUser(user_id, name, email, type, pool = db_pool) {
       await client.query("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
 
       const duplicateCheckQuery =
-        "SELECT * FROM users WHERE user_id = $1 AND name = $2 AND email = $3 AND user_type = $4 FOR UPDATE";
+        "SELECT * FROM users WHERE name = $1 AND email = $2 AND user_type = $3 FOR UPDATE";
       const duplicateResult = await client.query(duplicateCheckQuery, [
-        user_id,
         name,
         email,
         type,
@@ -60,17 +59,19 @@ export async function createUser(user_id, name, email, type, pool = db_pool) {
       break;
     } catch (err) {
       if (client) {
-        await client.query("ROLLBACK");
-      }
-      if (
-        !err.message.includes("could not serialize access") &&
-        !err.message.includes("deadlock detected")
-      ) {
-        throw err;
+        if (
+          !(
+            err.message.includes("could not serialize access") ||
+            err.message.includes("deadlock detected")
+          )
+        ) {
+          throw err;
+        }
       }
       if (attempt === MAX_RETRIES - 1) {
-        throw new Error("Max update attempts exceeded");
+        throw new Error("Max retrieval attempts exceeded");
       }
+      await client.query("ROLLBACK");
     } finally {
       if (client) {
         client.release();
@@ -85,39 +86,27 @@ export async function getUser(user_id, pool = db_pool) {
     throw new Error("User ID must be provided");
   }
 
-  const MAX_RETRIES = 5;
   let client;
   let result = null;
 
-  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    try {
-      client = await pool.connect();
-      await client.query("BEGIN");
-      await client.query("SET TRANSACTION ISOLATION LEVEL READ COMMITTED");
+  try {
+    client = await pool.connect();
+    await client.query("BEGIN");
+    await client.query("SET TRANSACTION ISOLATION LEVEL READ COMMITTED");
 
-      const query =
-        "SELECT * FROM users WHERE user_id = $1 AND is_deleted = false FOR SHARE";
-      result = await client.query(query, [user_id]);
+    const query =
+      "SELECT * FROM users WHERE user_id = $1 AND is_deleted = false FOR SHARE";
+    result = await client.query(query, [user_id]);
 
-      await client.query("COMMIT");
-      break; // Break the retry loop upon successful transaction
-    } catch (err) {
-      if (client) {
-        await client.query("ROLLBACK");
-      }
-      if (
-        !err.message.includes("could not serialize access") &&
-        !err.message.includes("deadlock detected")
-      ) {
-        throw err;
-      }
-      if (attempt === MAX_RETRIES - 1) {
-        throw new Error("Max retrieval attempts exceeded");
-      }
-    } finally {
-      if (client) {
-        client.release();
-      }
+    await client.query("COMMIT");
+  } catch (err) {
+    if (client) {
+      await client.query("ROLLBACK");
+    }
+    throw err;
+  } finally {
+    if (client) {
+      client.release();
     }
   }
 
@@ -125,39 +114,27 @@ export async function getUser(user_id, pool = db_pool) {
 }
 
 export async function getUsers(pool = db_pool) {
-  const MAX_RETRIES = 5;
   let client;
   let result = null;
 
-  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    try {
-      client = await pool.connect();
-      await client.query("BEGIN");
-      await client.query("SET TRANSACTION ISOLATION LEVEL READ COMMITTED");
+  try {
+    client = await pool.connect();
+    await client.query("BEGIN");
+    await client.query("SET TRANSACTION ISOLATION LEVEL READ COMMITTED");
 
-      result = await client.query(
-        "SELECT * FROM users WHERE is_deleted = false FOR SHARE;"
-      );
+    result = await client.query(
+      "SELECT * FROM users WHERE is_deleted = false FOR SHARE;"
+    );
 
-      await client.query("COMMIT");
-      break; // Break the retry loop upon successful transaction
-    } catch (err) {
-      if (client) {
-        await client.query("ROLLBACK");
-      }
-      if (
-        !err.message.includes("could not serialize access") &&
-        !err.message.includes("deadlock detected")
-      ) {
-        throw err;
-      }
-      if (attempt === MAX_RETRIES - 1) {
-        throw new Error("Max retrieval attempts exceeded");
-      }
-    } finally {
-      if (client) {
-        client.release();
-      }
+    await client.query("COMMIT");
+  } catch (err) {
+    if (client) {
+      await client.query("ROLLBACK");
+    }
+    throw err;
+  } finally {
+    if (client) {
+      client.release();
     }
   }
 
@@ -165,39 +142,27 @@ export async function getUsers(pool = db_pool) {
 }
 
 export async function getEXCOEPFs(user_id, pool = db_pool) {
-  const MAX_RETRIES = 5;
   let client;
   let result = null;
 
-  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    try {
-      client = await pool.connect();
-      await client.query("BEGIN");
-      await client.query("SET TRANSACTION ISOLATION LEVEL READ COMMITTED");
+  try {
+    client = await pool.connect();
+    await client.query("BEGIN");
+    await client.query("SET TRANSACTION ISOLATION LEVEL READ COMMITTED");
 
-      const query =
-        "SELECT * FROM epfs WHERE exco_user_id=$1 AND is_deleted=false FOR SHARE";
-      result = await client.query(query, [user_id]);
+    const query =
+      "SELECT * FROM epfs WHERE exco_user_id=$1 AND is_deleted=false FOR SHARE";
+    result = await client.query(query, [user_id]);
 
-      await client.query("COMMIT");
-      break; // Break the retry loop upon successful transaction
-    } catch (err) {
-      if (client) {
-        await client.query("ROLLBACK");
-      }
-      if (
-        !err.message.includes("could not serialize access") &&
-        !err.message.includes("deadlock detected")
-      ) {
-        throw err;
-      }
-      if (attempt === MAX_RETRIES - 1) {
-        throw new Error("Max retrieval attempts exceeded");
-      }
-    } finally {
-      if (client) {
-        client.release();
-      }
+    await client.query("COMMIT");
+  } catch (err) {
+    if (client) {
+      await client.query("ROLLBACK");
+    }
+    throw err;
+  } finally {
+    if (client) {
+      client.release();
     }
   }
 

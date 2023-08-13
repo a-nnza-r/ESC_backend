@@ -14,7 +14,7 @@ describe("deleteUser", () => {
     const testUserId = "User1";
     const testName = "Test User1";
     const testEmail = "test1@test.com";
-    const testType = "exco";
+    const testType = "FRE";
     const createdUser = await createUser(
       testUserId,
       testName,
@@ -39,7 +39,7 @@ describe("deleteUser", () => {
     const testUserId = "User2";
     const testName = "Test User2";
     const testEmail = "test2@test.com";
-    const testType = "exco";
+    const testType = "FRE";
     const createdUser = await createUser(
       testUserId,
       testName,

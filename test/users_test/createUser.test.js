@@ -15,7 +15,7 @@ describe("createUser", () => {
     const user_id = "root01";
     const name = "Root User";
     const email = "root_user@example.com";
-    const type = "root";
+    const type = "ROOT";
     const createdUser = await createUser(user_id, name, email, type, test_pool);
     expectUserToMatch(createdUser, { user_id, name, email, user_type: type });
   });
@@ -24,7 +24,7 @@ describe("createUser", () => {
     const user_id = "osl01";
     const name = "OSL User";
     const email = "osl_user@example.com";
-    const type = "osl";
+    const type = "OSL";
     const createdUser = await createUser(user_id, name, email, type, test_pool);
     expectUserToMatch(createdUser, { user_id, name, email, user_type: type });
   });
@@ -33,7 +33,7 @@ describe("createUser", () => {
     const user_id = "exco01";
     const name = "EXCO User";
     const email = "exco_user@example.com";
-    const type = "exco";
+    const type = "FRE";
     const createdUser = await createUser(user_id, name, email, type, test_pool);
     expectUserToMatch(createdUser, { user_id, name, email, user_type: type });
   });
@@ -43,7 +43,7 @@ describe("createUser", () => {
     const user_id = "user01";
     const name = "";
     const email = "test@example.com";
-    const type = "exco";
+    const type = "FRE";
     await expect(
       createUser(user_id, name, email, type, test_pool)
     ).rejects.toThrow("Name must be provided");
@@ -53,7 +53,7 @@ describe("createUser", () => {
     const user_id = "user01";
     const name = "User";
     const email = "";
-    const type = "exco";
+    const type = "FRE";
     await expect(
       createUser(user_id, name, email, type, test_pool)
     ).rejects.toThrow("Invalid email format");
@@ -63,7 +63,7 @@ describe("createUser", () => {
     const user_id = "user01";
     const name = "User";
     const email = "invalid_email";
-    const type = "exco";
+    const type = "FRE";
     await expect(
       createUser(user_id, name, email, type, test_pool)
     ).rejects.toThrow("Invalid email format");
@@ -73,7 +73,7 @@ describe("createUser", () => {
     const user_id = "";
     const name = "User";
     const email = "user@example.com";
-    const type = "exco";
+    const type = "FRE";
     await expect(
       createUser(user_id, name, email, type, test_pool)
     ).rejects.toThrow("User ID must be provided");
@@ -86,7 +86,7 @@ describe("createUser", () => {
     const type = "invalid";
     await expect(
       createUser(user_id, name, email, type, test_pool)
-    ).rejects.toThrow("Invalid user type. Must be 'root', 'osl', or 'exco'");
+    ).rejects.toThrow("Invalid user type. Must be 'ROOT', 'OSL', or 'FRE'");
   });
 
   // Special cases
@@ -94,7 +94,7 @@ describe("createUser", () => {
     const user_id = "user01";
     const name = "User";
     const email = "user@example.com";
-    const type = "exco";
+    const type = "FRE";
     const firstCreatedUser = await createUser(
       user_id,
       name,
@@ -117,7 +117,7 @@ describe("createUser", () => {
     const user_id = "user01";
     const name = "User 1";
     const email = "user@example.com";
-    const type = "exco";
+    const type = "FRE";
 
     // Create first user
     const firstCreatedUser = await createUser(

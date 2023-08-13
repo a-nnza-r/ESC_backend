@@ -15,11 +15,11 @@ import {
   updateEPF,
   deleteEPF,
 } from "../models/epf_db.js";
-import { 
-  validateJSON_createEPF, 
-  validateJSON_updateEPF, 
-  validateParam_getEPF, 
-  validateParam_deleteEPF 
+import {
+  validateJSON_createEPF,
+  validateJSON_updateEPF,
+  validateParam_getEPF,
+  validateParam_deleteEPF,
 } from "../middleware/validationMiddleware_EPF.js";
 const router = express.Router();
 
@@ -240,7 +240,6 @@ router.put("/updateEPF", validateJSON_updateEPF, async (req, res) => {
     );
 
     if (updateCheck["epf_id"] == data["epf_id"]) {
-      await update_outstanding_EPF_count();
       res.status(200).send(`Updated EPF`);
     } else {
       res.status(400).send("EPF not found or could not update");
@@ -256,7 +255,6 @@ router.delete("/deleteEPF", validateParam_deleteEPF, async (req, res) => {
   try {
     const deletedEPF = await deleteEPF(parseInt(data.epf_id));
     if (deletedEPF["epf_id"] == data.epf_id) {
-      await update_outstanding_EPF_count();
       res.status(200).send(`Deleted EPF`);
     } else {
       res.status(404).send("EPF not found or could not delete");

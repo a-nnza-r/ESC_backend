@@ -122,18 +122,6 @@ CREATE TABLE epfs (
             REFERENCES users(user_id) 
 );
 
-CREATE TABLE FILES (
-    file_id SERIAL PRIMARY KEY,
-    epf_id INT NOT NULL,
-    file_name VARCHAR NOT NULL,
-    file_data BYTEA NOT NULL,
-
-    is_deleted BOOLEAN DEFAULT false,
-
-    CONSTRAINT fk_epf
-        FOREIGN KEY(epf_id)
-            REFERENCES EPFS(epf_id) 
-);
 
 
 

@@ -15,7 +15,7 @@ describe("getUser", () => {
       createdUserId,
       "Test User",
       "test@test.com",
-      "exco",
+      "FRE",
       test_pool
     );
     // assuming the createUser function returns the created user

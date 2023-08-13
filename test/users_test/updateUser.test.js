@@ -15,7 +15,7 @@ describe("updateUser", () => {
       userID: "1",
       name: "Test User",
       email: "test@test.com",
-      type: "exco",
+      type: "FRE",
     };
     const user = await createUser(
       userData.userID,
@@ -28,38 +28,26 @@ describe("updateUser", () => {
       userData.userID,
       "Updated Name",
       "updated@example.com",
-      "exco",
+      "FRE",
       test_pool
     );
     expectUserToMatch(updatedUser, {
       user_id: userData.userID,
       name: "Updated Name",
       email: "updated@example.com",
-      user_type: "exco",
+      user_type: "FRE",
     });
   });
 
   test("Test ID: 2 - Invalid user_id: Update user record by non-existent ID", async () => {
     await expect(
-      updateUser(
-        "999",
-        "Updated Name",
-        "updated@example.com",
-        "exco",
-        test_pool
-      )
+      updateUser("999", "Updated Name", "updated@example.com", "FRE", test_pool)
     ).rejects.toThrow();
   });
 
   test("Test ID: 3 - Non-integer user_id: Update user record by non-integer", async () => {
     await expect(
-      updateUser(
-        "abc",
-        "Updated Name",
-        "updated@example.com",
-        "exco",
-        test_pool
-      )
+      updateUser("abc", "Updated Name", "updated@example.com", "FRE", test_pool)
     ).rejects.toThrow();
   });
 
@@ -68,7 +56,7 @@ describe("updateUser", () => {
       userID: "2",
       name: "Test User",
       email: "test@test.com",
-      type: "exco",
+      type: "FRE",
     };
     await createUser(
       userData.userID,
@@ -82,7 +70,7 @@ describe("updateUser", () => {
         userData.userID,
         "Updated Name",
         "invalidemail",
-        "exco",
+        "FRE",
         test_pool
       )
     ).rejects.toThrow();
@@ -99,7 +87,7 @@ describe("updateUser", () => {
       userID: "3",
       name: "Test User",
       email: "test@test.com",
-      type: "exco",
+      type: "FRE",
     };
     await createUser(
       userData.userID,

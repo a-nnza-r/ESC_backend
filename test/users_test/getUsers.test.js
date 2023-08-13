@@ -15,13 +15,13 @@ describe("getUsers", () => {
       userID: "1",
       name: "John Loh",
       email: "john_loh@example.com",
-      type: "exco",
+      type: "FRE",
     };
     const userData2 = {
       userID: "2",
       name: "John High",
       email: "john_high@example.com",
-      type: "exco",
+      type: "FRE",
     };
 
     const user1 = await createUser(
@@ -66,13 +66,13 @@ describe("getUsers", () => {
       userID: "3",
       name: "John Loh",
       email: "john_loh@example.com",
-      type: "exco",
+      type: "FRE",
     };
     const userData2 = {
       userID: "4",
       name: "John High",
       email: "john_high@example.com",
-      type: "exco",
+      type: "FRE",
     };
 
     const user1 = await createUser(

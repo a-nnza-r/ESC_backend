@@ -1,4 +1,4 @@
-import { test_db_pool } from "./../test_utils";
+import { test_db_pool } from "../test_utils";
 
 export const test_pool = test_db_pool;
 
